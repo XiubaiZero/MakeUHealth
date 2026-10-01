@@ -1,0 +1,178 @@
+/* 基础样式变量 - 与你的设计一致 */
+:root {
+    --primary-color: #54BCBD; /* 主色调-青绿色 */
+    --danger-color: #BD3124;  /* 红色-返回按钮 */
+    --light-bg: #f0f0f0;      /* 页面背景 */
+    --card-bg: #ffffff;       /* 卡片背景 */
+    --border-color: #ddd;     /* 边框色 */
+    --text-primary: #333333;  /* 主要文字色 */
+    --text-secondary: #666666;/* 次要文字色 */
+    --radius: 4px;            /* 圆角半径 */
+    --shadow: 0 2px 4px rgba(0,0,0,0.1); /* 阴影 */
+}
+
+/* 基础重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', Arial, sans-serif;
+}
+
+body {
+    background-color: var(--light-bg);
+    color: var(--text-primary);
+}
+
+/* 按钮样式 */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+/* 主按钮（保存/提交/记录） */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #4aa8a9;
+    transform: translateY(-1px);
+}
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* 返回按钮（红色） */
+.btn-return {
+    background-color: var(--danger-color);
+    color: white;
+}
+.btn-return:hover {
+    background-color: #a6281e;
+}
+
+/* 输入框样式 */
+.input-field {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-size: 14px;
+    transition: border 0.2s;
+}
+.input-field:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* 性别选择器 */
+.radio-group {
+    display: flex;
+    width: 100%;
+}
+.radio-option {
+    flex: 1;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+.radio-option:first-child {
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+.radio-option:last-child {
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+.radio-option.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 卡片样式 */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* 模态框 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 40px 60px;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 表格样式 */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table th {
+    background-color: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+}
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 布局工具类 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.flex {
+    display: flex;
+}
+.flex-col {
+    flex-direction: column;
+}
+.items-center {
+    align-items: center;
+}
+.justify-between {
+    justify-content: space-between;
+}
+.gap-4 {
+    gap: 1rem;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 10px;
+    }
+}

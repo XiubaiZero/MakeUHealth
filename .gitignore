@@ -1,0 +1,8 @@
+.validation/
+**/.npm-cache/
+_merge_tmp/
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
