@@ -1,11 +1,12 @@
 package com.example.ipd_sp_back_end.service;
 
 import java.net.http.HttpClient;
+import com.example.ipd_sp_back_end.assistant.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 final class AssistantServiceTestSupport {
     private AssistantServiceTestSupport() { }
-    static AssistantService unconfigured() { return new AssistantService(); }
+    static AssistantService unconfigured() { return new AssistantService(new RuleBasedAssistantIntentClassifier(), new AssistantReplyCatalog(), new AssistantContextFormatter(), new AssistantPromptBuilder()); }
     static AssistantService configured(String url) {
         AssistantService service = unconfigured();
         ReflectionTestUtils.setField(service, "deepseekApiKey", "test-only-key");

@@ -21,7 +21,7 @@ class AssistantLanguageTests {
 
     @Test
     void capabilityAndScopeRepliesFollowTheSelectedLanguage() {
-        AssistantService service = new AssistantService();
+        AssistantService service = AssistantServiceTestSupport.unconfigured();
         assertTrue(service.ask(request("zh-CN", "你能做什么")).contains("健康数据"));
         assertTrue(service.ask(request("en", "what can you do")).contains("health and fitness"));
         assertTrue(service.ask(request("zh-CN", "write a poem")).contains("我只能回答"));
@@ -30,7 +30,7 @@ class AssistantLanguageTests {
 
     @Test
     void missingConfigurationKeepsEnglishCompatibilityAndOffersAChineseReply() {
-        AssistantService service = new AssistantService();
+        AssistantService service = AssistantServiceTestSupport.unconfigured();
         assertTrue(service.ask(request(null, "fitness plan")).contains("API key is missing"));
         assertEquals("健康助手暂未配置，请稍后再试。", service.ask(request("zh-CN", "健康运动计划")));
     }
@@ -50,7 +50,7 @@ class AssistantLanguageTests {
         });
         server.start();
         try {
-            AssistantService service = new AssistantService();
+            AssistantService service = AssistantServiceTestSupport.unconfigured();
             ReflectionTestUtils.setField(service, "deepseekApiKey", "test-only-key");
             ReflectionTestUtils.setField(service, "deepseekBaseUrl", "http://127.0.0.1:" + server.getAddress().getPort());
             ReflectionTestUtils.setField(service, "deepseekModel", "test-model");
