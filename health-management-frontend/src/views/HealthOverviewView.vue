@@ -1,7 +1,7 @@
 <template>
   <div class="overview-page">
     <section class="hero-band">
-      <div>
+      <div class="hero-heading">
         <p class="eyebrow">{{ t("Overview") }}</p>
         <h1>{{ t("Health dashboard") }}</h1>
         <p class="hero-copy"> {{ t("View your profile, body health, diet intake, fitness plans, and reminders in one place.") }} </p>
@@ -1436,27 +1436,174 @@ h1 {
 }
 
 @media (max-width: 760px) {
-  .hero-band,
   .card-header,
   .list-item header,
   .timeline-item header {
     flex-direction: column;
   }
 
-  .metric-grid {
-    grid-template-columns: 1fr;
+  .overview-page {
+    gap: 14px;
   }
 
-  .combined-grid {
-    grid-template-columns: 1fr;
+  .hero-band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 8px;
+    padding: 16px 14px;
+    border-radius: 20px;
+  }
+
+  .hero-heading {
+    display: contents;
+  }
+
+  .hero-band .eyebrow {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .hero-band h1 {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    line-height: 1.3;
+  }
+
+  .hero-band > .ghost-button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    padding: 12px 10px;
+    min-height: 44px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .hero-copy {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
   }
 
   .profile-summary-strip {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .profile-summary-card {
+    min-width: 0;
+    border-width: 2px;
+    border-radius: 18px;
+    padding: 14px 8px;
+    gap: 7px;
+  }
+
+  .profile-summary-icon-wrap {
+    width: 46px;
+    height: 46px;
+  }
+
+  .profile-summary-icon,
+  .profile-summary-icon.is-gender {
+    width: 34px;
+    height: 34px;
+  }
+
+  .profile-summary-label {
+    font-size: 0.75rem;
+  }
+
+  .profile-summary-value {
+    font-size: 1.45rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-summary-value span {
+    font-size: 0.7rem;
+  }
+
+  .profile-summary-context {
+    font-size: 0.75rem;
+  }
+
+  .card {
+    min-width: 0;
+    padding: 14px 12px;
+    border-radius: 20px;
+    overflow-wrap: anywhere;
+  }
+
+  .top-grid,
+  .bottom-grid,
+  .left-stack {
+    gap: 14px;
+  }
+
+  .card-header {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .timeline-item,
+  .list-item {
+    min-width: 0;
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+
+  .timeline-item header,
+  .list-item header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .record-header-actions,
+  .intake-header-actions {
+    flex-wrap: wrap;
+  }
+
+  .combined-grid {
+    gap: 8px;
+  }
+
+  .combined-block {
+    min-width: 0;
+    padding: 10px;
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+
+  .combined-block h3 {
+    font-size: 0.8rem;
+  }
+
+  .profile-reminder {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.85rem;
   }
 
   .chart {
-    height: 320px;
+    height: 280px;
+  }
+}
+
+@media (max-width: 360px) {
+  .combined-grid,
+  .metric-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
