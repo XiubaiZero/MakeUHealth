@@ -2,13 +2,43 @@
   <div class="assistant-page">
     <p v-if="statusMessage" class="status-banner">{{ t(statusMessage) }}</p>
 
+    <p v-if="cloudError" class="status-banner" role="status">{{ t(cloudError) }}</p>
+    <p v-if="!chatReady" class="sync-notice">{{ t('Loading conversations...') }}</p>
+    <p v-else-if="!online" class="sync-notice">{{ t('Chat storage is unavailable. Your draft has been kept.') }}</p>
+    <div v-if="unconfirmed" class="sync-notice">
+      <p>{{ t('Confirming whether your question was saved. Retry uses the same request ID.') }}</p>
+      <p>{{ pendingQuestion }}</p>
+      <button class="ghost-button" type="button" :disabled="working" @click="cloud.resolvePending">{{ t('Check send status') }}</button>
+    </div>
+    <div class="assistant-workspace">
+    <aside class="conversation-panel" :class="{ 'panel-open': showConversations }" :aria-label="t('Conversations')">
+      <div class="conversation-toolbar">
+        <h3>{{ t('Conversations') }}</h3>
+        <button class="ghost-button" type="button" :disabled="working || !online || unconfirmed" @click="newConversation">{{ t('New chat') }}</button>
+      </div>
+      <button class="ghost-button" type="button" :disabled="working" @click="refreshChat">{{ t('Refresh chats') }}</button>
+      <button v-if="legacyAvailable" class="ghost-button" type="button" :disabled="working || !online || unconfirmed" @click="showImportDialog = true">{{ t('Import browser history') }}</button>
+      <div class="conversation-items">
+        <button v-for="item in conversations" :key="item.id" class="conversation-item" :class="{ active: currentConversation?.id === item.id }" type="button" :disabled="working || unconfirmed" @click="selectConversation(item)">
+          <strong>{{ item.title || t('New chat') }}</strong>
+          <small>{{ formatDate(item.updatedAt) }}</small>
+        </button>
+        <p v-if="online && !conversations.length" class="empty-hint">{{ t('No conversations yet.') }}</p>
+      </div>
+      <button v-if="hasMoreConversations" class="ghost-button" type="button" :disabled="working" @click="loadMoreConversations">{{ t('Load more chats') }}</button>
+    </aside>
     <section class="chat-card">
       <div class="card-header">
         <div>
           <p class="eyebrow">{{ t("Assistant") }}</p>
-          <h2>{{ t("Health & Fitness Chat") }}</h2>
+          <h2>{{ currentConversation?.title || t("Health & Fitness Chat") }}</h2>
         </div>
-        <button class="ghost-button danger-ghost" type="button" :disabled="sending" @click="requestDeleteConversation"> {{ t("Delete chat") }} </button>
+        <div class="conversation-actions">
+          <button class="ghost-button conversation-toggle" type="button" :aria-expanded="showConversations" @click="showConversations = !showConversations">{{ t('Conversations') }}</button>
+          <button class="ghost-button" type="button" :disabled="working" @click="refreshChat">{{ t('Refresh chats') }}</button>
+          <button class="ghost-button" type="button" :disabled="working || !online || !currentConversation || unconfirmed" @click="openRenameDialog">{{ t('Rename chat') }}</button>
+          <button class="ghost-button danger-ghost" type="button" :disabled="working || !online || !currentConversation" @click="requestDeleteConversation">{{ t('Delete chat') }}</button>
+        </div>
       </div>
 
       <div class="embedded-baseline">
@@ -93,6 +123,8 @@
       </div>
 
       <div ref="chatScrollRef" class="chat-stream">
+        <button v-if="nextBefore !== null" class="ghost-button older-messages" type="button" :disabled="working || !online" @click="loadOlderMessages">{{ t('Load earlier messages') }}</button>
+        <p v-if="!messages.length" class="empty-hint">{{ t('Hello. I focus on body health, diet nutrition, and fitness planning. Ask anything in this scope and I will answer based on your saved profile, records, and goals.') }}</p>
         <div
           v-for="message in messages"
           :key="message.id"
@@ -191,6 +223,11 @@
         </div>
       </div>
 
+      <div v-if="failedTask && messages[messages.length - 1]?.id === failedTask.questionId" class="sync-notice">
+        <p>{{ t(failedTask.error || 'Generation interrupted. Please retry.') }}</p>
+        <button class="ghost-button" type="button" :disabled="working || sending || !online || unconfirmed" @click="retryFailedQuestion">{{ t('Retry generation') }}</button>
+      </div>
+
       <form v-if="!deleteSelectionMode" class="chat-input-wrap" @submit.prevent="sendMessage">
         <p v-if="editingMessageId" class="edit-banner"> {{ t("Editing a previous message.") }} <button class="inline-action-button" type="button" :disabled="sending" @click="cancelEditMessage"> {{ t("Cancel edit") }} </button>
         </p>
@@ -199,11 +236,11 @@
           v-model="draftMessage"
           rows="3"
           :placeholder="t('Ask about body health, diet nutrition, or fitness planning...')"
-          :disabled="sending"
+          :disabled="sending || working"
           @keydown.esc="cancelEditMessage"
         ></textarea>
         <div class="chat-actions">
-          <button class="primary-button" type="submit" :disabled="sending || !draftMessage.trim()">
+          <button class="primary-button" type="submit" :disabled="sending || working || !online || unconfirmed || !draftMessage.trim()">
             {{ t(sending ? 'Thinking...' : editingMessageId ? 'Update & resend' : 'Send') }}
           </button>
         </div>
@@ -215,12 +252,13 @@
           <button
             class="danger-button"
             type="button"
-            :disabled="selectedMessageIds.length === 0"
+            :disabled="selectedMessageIds.length === 0 || working || !online || sending || unconfirmed"
             @click="openDeleteSelectedDialog"
           > {{ t("Delete") }} </button>
         </div>
       </div>
     </section>
+    </div>
 
     <div v-if="showIntro" class="intro-overlay">
       <div class="intro-content">
@@ -233,6 +271,38 @@
           {{ t(line) }}
         </p>
         <button class="intro-start-button" type="button" @click="closeIntro"> {{ t("Start now") }} </button>
+      </div>
+    </div>
+
+    <div v-if="showRenameDialog" class="confirm-overlay" @click.self="showRenameDialog = false">
+      <form class="confirm-dialog" @submit.prevent="confirmRename">
+        <h3>{{ t('Rename chat') }}</h3>
+        <label for="conversation-title">{{ t('Conversation title') }}</label>
+        <input id="conversation-title" v-model="renameTitle" maxlength="100" required />
+        <div class="confirm-actions">
+          <button class="cancel-button" type="button" @click="showRenameDialog = false">{{ t('Cancel') }}</button>
+          <button class="primary-button" type="submit" :disabled="working || !renameTitle.trim()">{{ t('Save') }}</button>
+        </div>
+      </form>
+    </div>
+    <div v-if="showImportDialog" class="confirm-overlay" @click.self="showImportDialog = false">
+      <div class="confirm-dialog">
+        <h3>{{ t('Import browser history') }}</h3>
+        <p>{{ t('This creates a separate conversation. Existing cloud records and your browser backup are preserved.') }}</p>
+        <div class="confirm-actions">
+          <button class="cancel-button" type="button" @click="showImportDialog = false">{{ t('Cancel') }}</button>
+          <button class="primary-button" type="button" :disabled="working || importing" @click="confirmImport">{{ t('Import') }}</button>
+        </div>
+      </div>
+    </div>
+    <div v-if="showEditConfirm" class="confirm-overlay" @click.self="showEditConfirm = false">
+      <div class="confirm-dialog">
+        <h3>{{ t('Update this question?') }}</h3>
+        <p>{{ t('The original answer and all later messages will be deleted before generating a new answer.') }}</p>
+        <div class="confirm-actions">
+          <button class="cancel-button" type="button" @click="showEditConfirm = false">{{ t('Cancel') }}</button>
+          <button class="primary-button" type="button" :disabled="working" @click="confirmEditResend">{{ t('Confirm') }}</button>
+        </div>
       </div>
     </div>
 
@@ -264,10 +334,13 @@
 import { t, dateLocale, locale } from '../i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { requestAssistantReply } from '../api/assistant'
-import type { AssistantContext, ChatMessage, GoalTypeValue } from '../features/assistant/types'
+import { conversationApi } from '../features/assistant/conversations/api'
+import { createConversationSession } from '../features/assistant/conversations/session'
+import { legacyImportAvailable, readLegacyHistory, markLegacyImported } from '../features/assistant/conversations/legacy'
+import { buildAssistantRequest } from '../features/assistant/transport'
+import type { Conversation, ConversationMessage as ChatMessage } from '../features/assistant/conversations/types'
+import type { AssistantContext, GoalTypeValue } from '../features/assistant/types'
 import { buildAssistantContext, countRecentFoodIntakes, findLatestHealthRecord } from '../features/assistant/context'
-import { resolveSuggestionPrompts } from '../features/assistant/rules'
 import { getDashboardDataByType } from '../api/fitnessGoals'
 import { getFoodIntakeByUserId } from '../api/food'
 import { getHealthRecordsByUserId } from '../api/healthRecords'
@@ -276,7 +349,18 @@ import { getUsers } from '../api/users'
 import { getAuthStorageScope } from '../utils/auth'
 
 const INTRO_KEY = 'smart-assistant-intro-seen-v1'
-const CHAT_HISTORY_PREFIX = 'smart-assistant-chat-history-v2'
+const cloud = createConversationSession(conversationApi, { scope: getAuthStorageScope, storage: sessionStorage })
+const { conversations, current: currentConversation, messages, sending, working, online, error: cloudError, draft: draftMessage,
+  editingId: editingMessageId, nextBefore, hasMoreConversations, failedTask, unconfirmed, pendingQuestion } = cloud
+const showConversations = ref(false)
+const showRenameDialog = ref(false)
+const renameTitle = ref('')
+const showImportDialog = ref(false)
+const importing = ref(false)
+const showEditConfirm = ref(false)
+const editConfirmed = ref(false)
+const legacyAvailable = ref(legacyImportAvailable(localStorage, getAuthStorageScope()))
+const chatReady = ref(false)
 const goalTypeOptions: Array<{ value: GoalTypeValue; label: string }> = [
   { value: 'muscle_gain', label: 'Muscle gain' },
   { value: 'weight_loss', label: 'Weight loss' },
@@ -290,19 +374,15 @@ const selectedGoalType = ref<GoalTypeValue>('muscle_gain')
 const showGoalTypeMenu = ref(false)
 const goalMenuRef = ref<HTMLElement | null>(null)
 const loadingContext = ref(false)
-const sending = ref(false)
+let contextEpoch = 0
 const statusMessage = ref('')
-const draftMessage = ref('')
 const showIntro = ref(false)
 const showDeleteDialog = ref(false)
 const showDeleteSelectedDialog = ref(false)
 const deleteSelectionMode = ref(false)
-const messages = ref<ChatMessage[]>([])
 const chatScrollRef = ref<HTMLDivElement | null>(null)
 const chatInputRef = ref<HTMLTextAreaElement | null>(null)
-const currentChatStorageKey = ref('')
-const editingMessageId = ref<number | null>(null)
-const selectedMessageIds = ref<number[]>([])
+const selectedMessageIds = ref<string[]>([])
 
 const selectedMessageSet = computed(() => new Set(selectedMessageIds.value))
 
@@ -410,77 +490,6 @@ function closeIntro() {
   localStorage.setItem(INTRO_KEY, '1')
 }
 
-function createMessageId() {
-  return Date.now() + Math.floor(Math.random() * 1000)
-}
-
-function defaultAssistantMessage(): ChatMessage[] {
-  return [
-    {
-      id: createMessageId(),
-      role: 'assistant',
-      content: t('Hello. I focus on body health, diet nutrition, and fitness planning. Ask anything in this scope and I will answer based on your saved profile, records, and goals.'),
-    },
-  ]
-}
-
-function resolveChatStorageKey() {
-  const scope = getAuthStorageScope()
-  return `${CHAT_HISTORY_PREFIX}:${scope}`
-}
-
-function persistChatHistory() {
-  if (!currentChatStorageKey.value) {
-    currentChatStorageKey.value = resolveChatStorageKey()
-  }
-  localStorage.setItem(currentChatStorageKey.value, JSON.stringify(messages.value.slice(-80)))
-}
-
-function restoreChatHistory(force = false) {
-  const key = resolveChatStorageKey()
-  if (!force && currentChatStorageKey.value === key && messages.value.length > 0) {
-    return
-  }
-
-  currentChatStorageKey.value = key
-  const raw = localStorage.getItem(key)
-  if (!raw) {
-    messages.value = defaultAssistantMessage()
-    persistChatHistory()
-    return
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as ChatMessage[]
-    const valid = Array.isArray(parsed)
-      ? parsed.filter(
-          (item) =>
-            typeof item?.id === 'number' &&
-            (item.role === 'assistant' || item.role === 'user') &&
-            typeof item.content === 'string' &&
-            item.content.trim().length > 0,
-        )
-          .map((item) => {
-            const prompts = Array.isArray(item.suggestionPrompts)
-              ? item.suggestionPrompts.filter((prompt) => typeof prompt === 'string' && prompt.trim().length > 0).slice(0, 6)
-              : undefined
-            return {
-              ...item,
-              suggestionPrompts: prompts,
-            }
-          })
-      : []
-
-    messages.value = valid.length > 0 ? valid : defaultAssistantMessage()
-    if (!valid.length) {
-      persistChatHistory()
-    }
-  } catch {
-    messages.value = defaultAssistantMessage()
-    persistChatHistory()
-  }
-}
-
 async function scrollToBottom() {
   await nextTick()
   chatScrollRef.value?.scrollTo({
@@ -518,7 +527,7 @@ function cancelEditMessage() {
 }
 
 function requestDeleteConversation() {
-  if (sending.value) {
+  if (working.value) {
     return
   }
   showDeleteDialog.value = true
@@ -529,28 +538,23 @@ function cancelDeleteConversation() {
 }
 
 async function confirmDeleteConversation() {
-  messages.value = defaultAssistantMessage()
-  deleteSelectionMode.value = false
-  selectedMessageIds.value = []
-  showDeleteSelectedDialog.value = false
-  editingMessageId.value = null
-  draftMessage.value = ''
-  showDeleteDialog.value = false
-  persistChatHistory()
-  setStatus('Conversation deleted.')
+  if (!await cloud.remove()) return
+  deleteSelectionMode.value = false; selectedMessageIds.value = []; showDeleteSelectedDialog.value = false
+  showDeleteDialog.value = false; setStatus('Conversation deleted.')
   await scrollToBottom()
 }
 
 async function loadAssistantContext() {
+  const ticket = ++contextEpoch, scope = getAuthStorageScope()
   loadingContext.value = true
   try {
     const users = await getUsers()
+    if (ticket !== contextEpoch || scope !== getAuthStorageScope()) return
     if (users.length === 0) {
       profile.value = null
       healthRecords.value = []
       foodIntakes.value = []
       fitnessDashboards.value = createEmptyGoalDashboards()
-      restoreChatHistory(true)
       return
     }
 
@@ -561,7 +565,6 @@ async function loadAssistantContext() {
       healthRecords.value = []
       foodIntakes.value = []
       fitnessDashboards.value = createEmptyGoalDashboards()
-      restoreChatHistory(true)
       return
     }
 
@@ -581,6 +584,7 @@ async function loadAssistantContext() {
       ),
     ])
 
+    if (ticket !== contextEpoch || scope !== getAuthStorageScope()) return
     healthRecords.value = records
     foodIntakes.value = intakes
 
@@ -597,15 +601,14 @@ async function loadAssistantContext() {
       }
     }
 
-    restoreChatHistory()
   } catch (error) {
-    setStatus(error instanceof Error ? error.message : 'Failed to load assistant context.')
+    if (ticket === contextEpoch && scope === getAuthStorageScope()) setStatus(error instanceof Error ? error.message : 'Failed to load assistant context.')
   } finally {
-    loadingContext.value = false
+    if (ticket === contextEpoch) loadingContext.value = false
   }
 }
 
-function resolveLinkedMessageIds(messageId: number) {
+function resolveLinkedMessageIds(messageId: string) {
   const index = messages.value.findIndex((message) => message.id === messageId)
   if (index < 0) {
     return []
@@ -632,7 +635,7 @@ function resolveLinkedMessageIds(messageId: number) {
   return [...new Set(linked)]
 }
 
-function startDeleteSelectionFromMessage(messageId: number) {
+function startDeleteSelectionFromMessage(messageId: string) {
   if (sending.value) {
     return
   }
@@ -646,7 +649,7 @@ function startDeleteSelectionFromMessage(messageId: number) {
   selectedMessageIds.value = linkedIds
 }
 
-function toggleMessageSelection(messageId: number, checked: boolean) {
+function toggleMessageSelection(messageId: string, checked: boolean) {
   if (checked) {
     if (!selectedMessageIds.value.includes(messageId)) {
       selectedMessageIds.value.push(messageId)
@@ -668,17 +671,8 @@ function cancelDeleteSelectedDialog() {
 }
 
 async function confirmDeleteSelected() {
-  const selected = new Set(selectedMessageIds.value)
-  messages.value = messages.value.filter((message) => !selected.has(message.id))
-
-  if (messages.value.length === 0) {
-    messages.value = defaultAssistantMessage()
-  }
-
-  showDeleteSelectedDialog.value = false
-  deleteSelectionMode.value = false
-  selectedMessageIds.value = []
-  persistChatHistory()
+  if (!await cloud.removeMessages(selectedMessageIds.value)) return
+  showDeleteSelectedDialog.value = false; deleteSelectionMode.value = false; selectedMessageIds.value = []
   setStatus('Selected messages deleted.')
   await scrollToBottom()
 }
@@ -704,86 +698,103 @@ async function sendSuggestionPrompt(prompt: string) {
 }
 
 async function sendMessage() {
-  const question = draftMessage.value.trim()
-  if (!question) {
-    return
-  }
-
-  const currentEditId = editingMessageId.value
-  if (currentEditId) {
-    const targetIndex = messages.value.findIndex((item) => item.id === currentEditId && item.role === 'user')
-    if (targetIndex === -1) {
-      editingMessageId.value = null
-      setStatus('Original message was not found.')
-      return
-    }
-
-    const targetMessage = messages.value[targetIndex]
-    if (!targetMessage) {
-      editingMessageId.value = null
-      setStatus('Original message was not found.')
-      return
-    }
-    messages.value[targetIndex] = {
-      id: targetMessage.id,
-      role: 'user',
-      content: question,
-    }
-    messages.value = messages.value.slice(0, targetIndex + 1)
-  } else {
-    messages.value.push({
-      id: createMessageId(),
-      role: 'user',
-      content: question,
-    })
-  }
-
-  persistChatHistory()
-  draftMessage.value = ''
-  sending.value = true
-  editingMessageId.value = null
-  deleteSelectionMode.value = false
-  selectedMessageIds.value = []
+  if (editingMessageId.value && !editConfirmed.value) { showEditConfirm.value = true; return }
+  const request = buildAssistantRequest(draftMessage.value.trim(), assistantContext.value)
+  await cloud.send({ ...request, mode: (import.meta.env.VITE_ASSISTANT_MODE || 'api').toLowerCase() === 'api' ? 'api' : 'local' })
+  deleteSelectionMode.value = false; selectedMessageIds.value = []
   await scrollToBottom()
-
+}
+async function confirmEditResend() {
+  showEditConfirm.value = false; editConfirmed.value = true
+  try { await sendMessage() } finally { editConfirmed.value = false }
+}
+async function retryFailedQuestion() {
+  const question = messages.value.find(item => item.id === failedTask.value?.questionId)
+  if (question) { await startEditMessage(question); await sendMessage() }
+}
+async function refreshChat() { await cloud.refresh(); legacyAvailable.value = legacyImportAvailable(localStorage, getAuthStorageScope()) }
+async function selectConversation(item: Conversation) {
+  await cloud.select(item); showConversations.value = false
+  deleteSelectionMode.value = false; selectedMessageIds.value = []
+  await scrollToBottom()
+}
+async function newConversation() { await cloud.create(); showConversations.value = false; deleteSelectionMode.value = false; selectedMessageIds.value = []; await scrollToBottom() }
+async function loadMoreConversations() {
+  try { await cloud.refreshList(true) } catch { setStatus('Failed to load conversations.') }
+}
+async function loadOlderMessages() {
+  const element = chatScrollRef.value, height = element?.scrollHeight || 0, top = element?.scrollTop || 0
+  await cloud.older(); await nextTick()
+  if (element) element.scrollTop = top + element.scrollHeight - height
+}
+function openRenameDialog() { renameTitle.value = currentConversation.value?.title || ''; showRenameDialog.value = true }
+async function confirmRename() { await cloud.rename(renameTitle.value); if (currentConversation.value?.title === renameTitle.value.trim()) showRenameDialog.value = false }
+async function confirmImport() {
+  importing.value = true
+  const scope = getAuthStorageScope(), legacy = readLegacyHistory(localStorage, scope)
   try {
-    const reply = await requestAssistantReply(question, assistantContext.value)
-    const suggestionPrompts = resolveSuggestionPrompts(question, reply)
-    messages.value.push({
-      id: createMessageId(),
-      role: 'assistant',
-      content: reply,
-      suggestionPrompts,
-    })
-    persistChatHistory()
-  } catch {
-    messages.value.push({
-      id: createMessageId(),
-      role: 'assistant',
-      content: t('I cannot respond right now. Please try again.'),
-    })
-    persistChatHistory()
-  } finally {
-    sending.value = false
-    await scrollToBottom()
-  }
+    const imported = await conversationApi.importHistory(legacy, locale.value)
+    if (scope !== getAuthStorageScope()) return
+    markLegacyImported(localStorage, scope, legacy); legacyAvailable.value = false; showImportDialog.value = false
+    await cloud.select(imported); await cloud.refreshList(); setStatus('Browser history imported.')
+  } catch { setStatus('Import failed. Your browser history is unchanged.') }
+  finally { importing.value = false }
+}
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible') { cloud.resume(); void refreshChat() }
+  else cloud.suspend()
+}
+function handleAuthStorage(event: StorageEvent) {
+  if (event.key !== 'health-management-auth-session') return
+  contextEpoch++; profile.value = null; healthRecords.value = []; foodIntakes.value = []; fitnessDashboards.value = createEmptyGoalDashboards()
+  void refreshChat(); void loadAssistantContext()
 }
 
 onMounted(async () => {
   document.addEventListener('click', handleDocumentClick)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('storage', handleAuthStorage)
   await loadAssistantContext()
-  restoreChatHistory()
+  await cloud.refresh()
+  chatReady.value = true
 
   showIntro.value = !Boolean(localStorage.getItem(INTRO_KEY))
   await scrollToBottom()
 })
 
 onBeforeUnmount(() => {
+  contextEpoch++
   document.removeEventListener('click', handleDocumentClick)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('storage', handleAuthStorage)
+  cloud.dispose()
 })
 </script>
 
 <style scoped>
+.assistant-workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 1rem; align-items: start; }
+.conversation-panel { min-width: 0; padding: 1rem; border: 1px solid #d7e5e2; border-radius: 18px; background: #f4f9f7; display: grid; gap: .75rem; }
+.conversation-toolbar, .conversation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.conversation-toolbar h3 { margin: 0; }
+.conversation-items { display: grid; gap: .5rem; max-height: 60vh; overflow-y: auto; }
+.conversation-item { display: grid; gap: .35rem; width: 100%; min-height: 52px; padding: .75rem; border: 1px solid #d7e5e2; border-radius: 12px; background: white; text-align: left; cursor: pointer; color: #12343b; overflow-wrap: anywhere; }
+.conversation-item.active { border-color: #65a8a9; background: #def2ef; }
+.conversation-item small { color: #647e80; }
+.conversation-toggle { display: none; }
+.sync-notice { margin: 0; padding: .8rem; border-radius: 12px; background: #fff6d6; color: #7d5a00; overflow-wrap: anywhere; }
+.sync-notice p { margin: .3rem 0; }
+.older-messages { justify-self: center; }
+.chat-card { min-width: 0; }
+.card-header h2 { overflow-wrap: anywhere; }
+.confirm-dialog input { width: 100%; box-sizing: border-box; padding: .7rem; border: 1px solid #d7e5e2; border-radius: 10px; }
+@media (max-width: 1100px) {
+  .assistant-workspace { grid-template-columns: minmax(0, 1fr); }
+  .conversation-panel { display: none; }
+  .conversation-panel.panel-open { display: grid; }
+  .conversation-toggle { display: inline-flex; }
+  .conversation-actions { width: 100%; }
+}
+
 .assistant-page {
   display: grid;
   gap: 1rem;
@@ -1456,6 +1467,10 @@ h2 {
   .baseline-header > div {
     min-width: 0;
     flex: 1;
+  }
+
+  .card-header > .conversation-actions {
+    flex: 1 0 100%;
   }
 
   .card-header h2 {
