@@ -100,7 +100,7 @@ public class AssistantConversationService {
         if (request.messageIds() == null || request.messageIds().isEmpty() || request.messageIds().size() > 1000) throw error(HttpStatus.BAD_REQUEST, "Select messages to delete.");
         transaction(account, () -> {
             revision(owned(account, id), request.expectedRevision()); idle(id);
-            if (memory!=null) memory.invalidate(account,id);
+            if (memory!=null) memory.invalidateSources(account,id,request.messageIds());
             for (String message : new HashSet<>(request.messageIds())) {
                 if (repository.message(id, message) == null) throw error(HttpStatus.NOT_FOUND, "Message not found.");
                 repository.deleteMessage(id, message);
@@ -139,13 +139,18 @@ public class AssistantConversationService {
                 Message original = repository.message(id, request.editMessageId());
                 if (original == null || !"user".equals(original.role())) throw error(HttpStatus.NOT_FOUND, "Original question not found.");
                 questionId = original.id();
-                if (memory!=null) memory.invalidate(account,id);
+                if (memory!=null) memory.invalidateFrom(account,id,original.sequence());
                 repository.edit(id, original, question, payload.language());
             } else {
                 questionId = uuid();
                 repository.append(id, questionId, "user", question, payload.language(), "user", null, false);
             }
             repository.defaultTitle(id, question.substring(0, question.offsetByCodePoints(0, Math.min(30, question.codePointCount(0, question.length())))));
+            if (memory!=null && !"local".equals(payload.mode())) {
+                var input=new AssistantChatRequest();input.setMessage(question);input.setLanguage(payload.language());input.setContext(payload.context());input.setConstraints(payload.constraints());
+                try { engine.validate(new AssistantGenerationRequest(input,payload.mode(),memory.snapshot(account,id,questionId))); }
+                catch(IllegalArgumentException exception) { throw error(HttpStatus.BAD_REQUEST,exception.getMessage()); }
+            }
             repository.task(uuid(), id, request.requestId(), questionId, raw);
             repository.touch(id); created[0] = true;
             return repository.byRequest(id, request.requestId());

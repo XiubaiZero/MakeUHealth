@@ -54,12 +54,14 @@ Linux 计划任务示例：
 
 ```bash
 bash deploy/backup.sh
-git switch --detach v0.2.1
+git switch --detach v0.2.2
 docker compose --env-file deploy/.env up -d --build
 docker compose --env-file deploy/.env ps
 ```
 
 后续版本回退时，选择之前已经验证、包含部署文件的版本及对应镜像标签，执行 up -d --no-build。数据库仍保留；若未来版本有不兼容数据库变更，先在停机窗口恢复升级前备份。本轮新增表不删除原业务数据。v0.2.0 未包含 Docker 文件，首次容器部署从 v0.2.1 开始。
+
+v0.2.2 新增记忆设置、摘要、候选项、来源及提取任务表，启动时自动建表，不删除原聊天。升级前备份；回退 v0.2.1 时新增表可保留，旧版本会忽略它们。已有 deploy/.env 的 HMS_IMAGE_TAG 需手动改为 v0.2.2；本轮没有上传镜像或部署公网。当前机器的 Docker Desktop 启动因 dockerInference 本地监听文件错误失败，v0.2.2 容器构建/启动尚未验证；Java、Vue 构建和独立 MySQL 的原生运行已验证，不沿用 v0.2.1 的容器测试结果作为本版证据。
 
 ## 域名与 HTTPS 上线准备
 

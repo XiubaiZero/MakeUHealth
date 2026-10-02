@@ -63,15 +63,39 @@ public class AssistantMemoryService {
         long oldestRecent=recent.isEmpty()?before:recent.get(0).questionSequence();
         var older=rounds(conversation,before," AND a.sequence_no>? AND a.sequence_no<?","ASC",20,covered,oldestRecent);
         int count=jdbc.queryForObject("SELECT COUNT(*) FROM ("+ROUND_SQL+") memory_rounds",Integer.class,conversation,before);
-        return new MemorySnapshot(true,accountRevision,setting.revision(),setting.contentRevision(),summary==null?"":summary,covered,recent,older,count,List.of());
+        return new MemorySnapshot(true,accountRevision,setting.revision(),setting.contentRevision(),summary==null?"":summary,covered,recent,older,count,facts(account));
+    }
+    public List<String> facts(int account) {
+        if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT enabled FROM assistant_memory_account WHERE account_id=?",Boolean.class,account))) return List.of();
+        return jdbc.queryForList("SELECT content FROM assistant_memory_item WHERE account_id=? AND status='confirmed' ORDER BY updated_at DESC,id LIMIT ?",String.class,account,properties.getCapacity());
     }
     public boolean valid(int account,String conversation,MemorySnapshot snapshot) {
         if (jdbc.queryForObject("SELECT COUNT(*) FROM assistant_memory_conversation c JOIN assistant_memory_account a ON a.account_id=? WHERE c.conversation_id=? AND c.revision=? AND c.content_revision=? AND a.revision=?",Integer.class,account,conversation,snapshot.settingsRevision(),snapshot.contentRevision(),snapshot.accountRevision())!=1) return false;
         return true;
     }
     public void invalidate(int account,String conversation) {
+        invalidateSources(account,conversation,null);
+    }
+    public void invalidateSources(int account,String conversation,List<String> messages) {
         ensure(account,conversation);
         jdbc.update("UPDATE assistant_memory_conversation SET summary=NULL,covered_sequence=0,content_revision=content_revision+1 WHERE conversation_id=?",conversation);
+        if(messages==null) {
+            removeItems(account,jdbc.queryForList("SELECT id FROM assistant_memory_item WHERE account_id=? AND source_conversation_id=?",String.class,account,conversation));return;
+        }
+        List<String> affected=messages;
+        if(affected.isEmpty()) return;
+        var args=new ArrayList<Object>();args.add(account);args.addAll(affected);
+        var ids=jdbc.queryForList("SELECT DISTINCT i.id FROM assistant_memory_item i JOIN assistant_memory_source s ON s.memory_id=i.id WHERE i.account_id=? AND s.message_id IN ("+String.join(",",Collections.nCopies(affected.size(),"?"))+")",String.class,args.toArray());
+        removeItems(account,ids);
+    }
+    private void removeItems(int account,List<String> ids) {
+        for(String id:ids) jdbc.update("DELETE FROM assistant_memory_item WHERE id=? AND account_id=?",id,account);
+        if(!ids.isEmpty()) jdbc.update("UPDATE assistant_memory_account SET revision=revision+1 WHERE account_id=?",account);
+    }
+    public void invalidateFrom(int account,String conversation,long sequence) {
+        ensure(account,conversation);
+        jdbc.update("UPDATE assistant_memory_conversation SET summary=NULL,covered_sequence=0,content_revision=content_revision+1 WHERE conversation_id=?",conversation);
+        removeItems(account,jdbc.queryForList("SELECT DISTINCT i.id FROM assistant_memory_item i JOIN assistant_memory_source s ON s.memory_id=i.id JOIN assistant_message m ON m.id=s.message_id WHERE i.account_id=? AND m.conversation_id=? AND m.sequence_no>=?",String.class,account,conversation,sequence));
     }
     public void saveMetadata(String message,Map<String,Object> metadata) {
         if (metadata==null || metadata.isEmpty()) return;

@@ -35,7 +35,7 @@ $env:SPRING_DATASOURCE_PASSWORD='<本机数据库密码>'
 .\mvnw.cmd spring-boot:run
 ```
 
-后端默认监听 `http://localhost:8081`。启动时按顺序执行 `schema.sql` 和 `data.sql`，创建表、补齐受支持旧结构缺失的字段、初始化食物库。数据库用户需要相应建表和修改表权限。
+后端默认监听 `http://localhost:8081`。启动时执行 `schema.sql`、`assistant-schema.sql`、`assistant-memory-schema.sql`，再运行 `data.sql`，创建业务、聊天及记忆表，补齐受支持旧字段并初始化食物库。数据库用户需要相应建表和修改表权限。
 
 另开终端启动前端：
 
@@ -59,6 +59,7 @@ npm run dev
 | `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | 数据库账号与密码；账号默认 `root`，密码通过本机环境变量设置 |
 | `AUTH_JWT_SECRET` / `AUTH_JWT_EXPIRATION_SECONDS` | JWT 签名密钥与有效期，默认有效期 604800 秒 |
 | `DEEPSEEK_API_KEY` | 后端调用 DeepSeek 的密钥 |
+| `DEEPSEEK_MODEL` | `deepseek-flash`；v0.2.2 使用非思考模式 |
 | `VITE_ASSISTANT_MODE` | `api`；其他值使用本地模板回答 |
 | `VITE_ASSISTANT_API_URL` | `/assistant/chat`，相对于 API 请求前缀 |
 
@@ -67,6 +68,8 @@ npm run dev
 新版聊天页面使用 `/api/assistant/conversations` 保存与读取记录，`VITE_ASSISTANT_API_URL` 仅控制保留的旧无状态入口。`VITE_ASSISTANT_MODE=local` 在新版页面仍需后端保存，只跳过付费模型调用。
 
 ## 聊天记录与跨设备
+
+v0.2.2 增加当前会话多轮上下文、增量摘要和需要用户确认的长期记忆。聊天页的「管理记忆」可主动提取候选项；「设置 → 长期记忆」可管理确认后的资料。会话记忆和账号长期记忆可以分别关闭。详见 [使用与配置](docs/AI_MEMORY.md) 和 [真实参数对照结果](docs/AI_MEMORY_EVALUATION.md)。
 
 - 会话与消息属于登录账号，保存于 MySQL；同一账号、同一后端及同一数据库的设备共享记录。
 - 支持新建、重命名、切换、删除会话；默认读取最近 80 条消息，可加载更早记录，数据库没有 80 条截断。

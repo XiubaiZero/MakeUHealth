@@ -15,6 +15,7 @@ public class JavaAssistantEngine implements AssistantEngine {
     private final AssistantIntentClassifier classifier;
     public JavaAssistantEngine(AssistantService assistant, AssistantIntentClassifier classifier) { this.assistant = assistant; this.classifier = classifier; }
     @Override public void validate(AssistantChatRequest request) { assistant.validateMemoryInput(request); }
+    @Override public void validate(AssistantGenerationRequest request) { assistant.validateMemoryInput(request.request(),request.memory()); }
     @Override public AssistantAnswer generate(AssistantGenerationRequest generation) {
         var request=generation.request(); var memory=generation.memory();
         boolean chinese="zh-CN".equals(request.getLanguage());

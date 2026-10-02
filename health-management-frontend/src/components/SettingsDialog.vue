@@ -6,7 +6,7 @@
           <button v-if="panel !== 'settings'" class="settings-icon-button" type="button" :aria-label="t('Back to settings')" @click="panel = 'settings'">←</button>
           <div>
             <p class="settings-eyebrow">HMS</p>
-            <h2 id="settings-title">{{ t(panel === 'language' ? 'Language' : panel === 'logout' ? 'Sign out' : 'Settings') }}</h2>
+            <h2 id="settings-title">{{ t(panel === 'language' ? 'Language' : panel === 'memory' ? 'Long-term memory' : panel === 'logout' ? 'Sign out' : 'Settings') }}</h2>
           </div>
           <button class="settings-icon-button settings-close" type="button" :aria-label="t('Close settings')" @click="close">×</button>
         </header>
@@ -17,6 +17,7 @@
             <span class="settings-row-copy"><strong>{{ t('Language') }}</strong><small>{{ locale === 'zh-CN' ? '简体中文' : 'English' }}</small></span>
             <span aria-hidden="true">›</span>
           </button>
+          <button v-if="authenticated" class="settings-row" type="button" @click="panel = 'memory'"><span class="settings-row-icon" aria-hidden="true">AI</span><span class="settings-row-copy"><strong>{{ t('Long-term memory') }}</strong><small>{{ t('Manage confirmed personal facts') }}</small></span><span aria-hidden="true">›</span></button>
           <button v-if="authenticated" class="settings-row settings-logout" type="button" @click="panel = 'logout'">
             <span class="settings-row-icon" aria-hidden="true">↪</span>
             <span class="settings-row-copy"><strong>{{ t('Sign out') }}</strong><small>{{ t('End your current session') }}</small></span>
@@ -36,6 +37,7 @@
           <button class="settings-primary" type="button" @click="close">{{ t('Done') }}</button>
         </div>
 
+        <MemoryManager v-else-if="panel === 'memory' && authenticated" />
         <div v-else class="settings-confirmation">
           <p class="settings-copy">{{ t('Are you sure you want to sign out?') }}</p>
           <div class="settings-actions">
@@ -51,10 +53,11 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { locale, setLocale, t, type AppLocale } from '../i18n'
+import MemoryManager from './MemoryManager.vue'
 
 const props = defineProps<{ open: boolean; authenticated: boolean; signingOut?: boolean }>()
 const emit = defineEmits<{ close: []; logout: [] }>()
-const panel = ref<'settings' | 'language' | 'logout'>('settings')
+const panel = ref<'settings' | 'language' | 'logout' | 'memory'>('settings')
 const dialogRef = ref<HTMLElement | null>(null)
 const languages: { value: AppLocale; label: string; description: string }[] = [
   { value: 'en', label: 'English', description: '英语' },
@@ -69,7 +72,7 @@ function confirmLogout() { if (!props.signingOut) emit('logout') }
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') { event.preventDefault(); close(); return }
   if (event.key !== 'Tab') return
-  const elements = dialogRef.value?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), [tabindex="0"]')
+  const elements = Array.from(dialogRef.value?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex="0"]') || []).filter(e => e.getClientRects().length)
   if (!elements?.length) return
   const first = elements[0]!, last = elements[elements.length - 1]!
   if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.value)) {
