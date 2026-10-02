@@ -10,7 +10,8 @@ class AssistantModuleTests {
     void classificationCanBeReplacedWithoutChangingPromptsOrReplies() {
         AssistantIntentClassifier classifier = question -> AssistantIntent.CAPABILITY;
         AssistantService service = new AssistantService(classifier, new AssistantReplyCatalog(),
-                new AssistantContextFormatter(), new AssistantPromptBuilder());
+                new AssistantContextFormatter(), new AssistantPromptBuilder(),
+                new DeepSeekChatClient(new DeepSeekProperties()), new AssistantResponseProcessor());
         AssistantChatRequest request = new AssistantChatRequest();
         request.setMessage("arbitrary intent supplied by another classifier");
         assertEquals(new AssistantReplyCatalog().capability(false), service.ask(request));

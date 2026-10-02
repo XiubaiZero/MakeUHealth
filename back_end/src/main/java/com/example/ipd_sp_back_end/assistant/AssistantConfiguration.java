@@ -1,0 +1,8 @@
+package com.example.ipd_sp_back_end.assistant;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(DeepSeekProperties.class)
+public class AssistantConfiguration { }

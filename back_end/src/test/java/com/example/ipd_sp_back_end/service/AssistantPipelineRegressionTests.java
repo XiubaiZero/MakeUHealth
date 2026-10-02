@@ -3,6 +3,7 @@ package com.example.ipd_sp_back_end.service;
 import com.example.ipd_sp_back_end.controller.AssistantController;
 import com.example.ipd_sp_back_end.dto.AssistantChatRequest;
 import com.example.ipd_sp_back_end.dto.ApiErrorResponse;
+import com.example.ipd_sp_back_end.assistant.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
@@ -79,6 +80,20 @@ class AssistantPipelineRegressionTests {
         try (var model=new FakeModel(503,"offline")) { assertModelFailure(model); }
         try (var model=new FakeModel(200,"")) { assertModelFailure(model); }
         try (var model=new FakeModel(200,"answer")) { model.rawBody="not-json"; assertModelFailure(model); }
+    }
+    @Test void failedEnglishRewriteKeeps500AndDoesNotReturnTheOriginalAnswer() {
+        AtomicInteger calls = new AtomicInteger();
+        ChatModelClient client = new ChatModelClient() {
+            public boolean isConfigured() { return true; }
+            public String complete(AssistantPrompt prompt) {
+                if (calls.incrementAndGet() == 1) return "保持运动。";
+                throw new RuntimeException("rewrite unavailable");
+            }
+        };
+        var response = new AssistantController(AssistantServiceTestSupport.service(client)).chat(input("en", "fitness plan"));
+        assertEquals(500, response.getStatusCode().value());
+        assertEquals("Assistant request failed: rewrite unavailable", ((ApiErrorResponse)response.getBody()).getMessage());
+        assertEquals(2, calls.get());
     }
     private void assertModelFailure(FakeModel model) {
         var response=new AssistantController(AssistantServiceTestSupport.configured(model.url())).chat(input("en","fitness plan"));
