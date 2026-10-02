@@ -8,7 +8,8 @@ export default defineConfig(({ mode }) => {
   const proxy = {
     '/api': {
       target: env.API_PROXY_TARGET || 'http://localhost:8081',
-      changeOrigin: true,
+      // Keep the browser-facing Host so same-origin POSTs also work on LAN URLs.
+      changeOrigin: false,
     },
   };
   return {

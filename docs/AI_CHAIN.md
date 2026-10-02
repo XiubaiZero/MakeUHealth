@@ -1,6 +1,32 @@
 # AI 链路与分阶段版本
 
-本轮从 `62128d0` 拆分现有实现，保留接口和行为。当前资料由前端传入，服务端没有知识库检索、多轮记忆、流式输出或工具调用。
+## v0.2.x 当前链路
+
+聊天页面通过 `features/assistant/conversations/` 调用云端会话接口；Java 统一管理账号权限、记录、版本冲突和生成任务。问题及任务先提交，`AssistantEngine` 在事务外生成，最后提交回答。前端进入、切换会话、返回前台和手动刷新时更新；等待生成期间每两秒查询，隐藏页面时暂停。
+
+```mermaid
+flowchart TD
+  View[聊天页面与健康上下文] --> Conversations[云端会话接口]
+  Conversations --> Save[短事务保存问题和任务]
+  Save --> Engine[AssistantEngine]
+  Engine --> Java[JavaAssistantEngine]
+  Java --> Ask[AssistantService.ask 与原模型链路]
+  Java --> Local[能力介绍与参考回复]
+  Ask --> Result[短事务保存回答]
+  Local --> Result
+  Result --> Sync[分页读取与任务状态]
+  Sync --> View
+```
+
+完整记录保存到数据库，80 仅为默认读取页大小。旧浏览器键仅用于用户主动导入；草稿、当前会话和未确认请求标识使用按账号隔离的 sessionStorage，不替代服务器聊天记录。原 `/api/assistant/chat` 和 `requestAssistantReply()` 继续供旧客户端兼容。
+
+后续 Python 服务通过 `AssistantEngine` 接入完整回答链路，Java 保留业务权限和聊天持久化；同一个引擎负责意图、提示词及回答处理，避免跨语言重复执行。当前资料仍由前端传入，没有知识库检索、多轮模型记忆、流式输出或工具调用。
+
+新接口和失败处理见[聊天持久化说明](CHAT_PERSISTENCE.md)。当前及后续 AI 迭代统一使用 `v0.2.x`，每个可发布迭代递增末位，直到项目所有者重新指定版本。
+
+## v0.1.x 链路拆分记录
+
+以下记录对应从 `62128d0` 到 `v0.1.2` 的原链路拆分及历史验证结果，保留用于回溯。
 
 ## 前后端职责
 
