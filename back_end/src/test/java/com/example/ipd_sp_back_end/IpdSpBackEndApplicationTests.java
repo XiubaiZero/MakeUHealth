@@ -98,6 +98,30 @@ class IpdSpBackEndApplicationTests {
     }
 
     @Test
+    void memoryManagementPersistsWithOwnershipRevisionsAndDisabledModelExtraction() throws Exception {
+        String owner=newAccount(),other=newAccount();
+        assertEquals(401,request("GET","/assistant/memory",null,null).statusCode());
+        var settings=ok("GET","/assistant/memory",owner,null).path("settings");
+        var item=ok("POST","/assistant/memory/items",owner,Map.of("expectedRevision",settings.path("revision").asLong(),"category","diet","content","我长期偏好素食。"));
+        String id=item.path("id").asText();assertEquals("confirmed",item.path("status").asText());
+        assertEquals(0,ok("GET","/assistant/memory",other,null).path("items").size());
+        assertEquals(404,request("DELETE","/assistant/memory/items/"+id+"?expectedRevision=0",other,null).statusCode());
+        ok("PATCH","/assistant/memory/items/"+id,owner,Map.of("expectedRevision",0,"category","diet","content","我偏好燕麦。"));
+        assertEquals(409,request("PATCH","/assistant/memory/items/"+id,owner,Map.of("expectedRevision",0,"category","diet","content","旧编辑")).statusCode());
+        long revision=ok("GET","/assistant/memory",owner,null).path("settings").path("revision").asLong();
+        ok("PATCH","/assistant/memory",owner,Map.of("expectedRevision",revision,"enabled",false));
+        assertFalse(ok("GET","/assistant/memory",owner,null).path("settings").path("enabled").asBoolean());
+        ok("PATCH","/assistant/memory",owner,Map.of("expectedRevision",revision+1,"enabled",true));
+        var conversation=ok("POST","/assistant/conversations",owner,null);
+        var extract=request("POST","/assistant/conversations/"+conversation.path("id").asText()+"/memory/extractions",owner,Map.of("requestId",UUID.randomUUID().toString(),"expectedRevision",0,"language","zh-CN"));
+        assertEquals(503,extract.statusCode());assertTrue(json.readTree(extract.body()).path("message").asText().contains("not configured"));
+        long current=ok("GET","/assistant/memory",owner,null).path("settings").path("revision").asLong();
+        assertEquals(204,request("DELETE","/assistant/memory?expectedRevision="+current,owner,null).statusCode());
+        assertEquals(0,ok("GET","/assistant/memory",owner,null).path("items").size());
+        assertEquals(1,ok("GET","/assistant/conversations",owner,null).path("items").size());
+    }
+
+    @Test
     void authenticationAndHealthRecordsStayWithinTheCurrentAccount() throws Exception {
         assertEquals(401, request("GET", "/users", null, null).statusCode());
         String owner = newAccount(), other = newAccount();

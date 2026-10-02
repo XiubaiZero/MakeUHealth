@@ -8,6 +8,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @EnableScheduling
 public class AssistantTaskConfiguration {
+    @Bean("assistantMemoryExecutor")
+    public ThreadPoolTaskExecutor assistantMemoryExecutor() {
+        var executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1); executor.setMaxPoolSize(1); executor.setQueueCapacity(8);
+        executor.setThreadNamePrefix("assistant-memory-");
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        return executor;
+    }
     @Bean("assistantTaskExecutor")
     public ThreadPoolTaskExecutor assistantTaskExecutor() {
         var executor = new ThreadPoolTaskExecutor();
