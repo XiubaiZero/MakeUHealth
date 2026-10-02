@@ -50,10 +50,7 @@ class AssistantLanguageTests {
         });
         server.start();
         try {
-            AssistantService service = AssistantServiceTestSupport.unconfigured();
-            ReflectionTestUtils.setField(service, "deepseekApiKey", "test-only-key");
-            ReflectionTestUtils.setField(service, "deepseekBaseUrl", "http://127.0.0.1:" + server.getAddress().getPort());
-            ReflectionTestUtils.setField(service, "deepseekModel", "test-model");
+            AssistantService service = AssistantServiceTestSupport.configured("http://127.0.0.1:" + server.getAddress().getPort());
             assertEquals("请保持均衡饮食与规律运动。", service.ask(request("zh-CN", "健康运动计划")));
             String systemPrompt = payload.get().path("messages").get(0).path("content").asText();
             assertTrue(systemPrompt.contains("Respond in Simplified Chinese."));
