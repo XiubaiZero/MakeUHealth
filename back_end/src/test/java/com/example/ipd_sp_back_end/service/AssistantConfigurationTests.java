@@ -19,6 +19,8 @@ class AssistantConfigurationTests {
                     "assistant.deepseek.model", "test-model",
                     "assistant.deepseek.api-key", "test-only-key")));
             context.scan("com.example.ipd_sp_back_end.assistant");
+            context.registerBean(org.springframework.jdbc.core.JdbcTemplate.class,()->org.mockito.Mockito.mock(org.springframework.jdbc.core.JdbcTemplate.class));
+            context.registerBean(org.springframework.transaction.support.TransactionTemplate.class,()->org.mockito.Mockito.mock(org.springframework.transaction.support.TransactionTemplate.class));
             context.register(AssistantService.class);
             context.refresh();
             var properties = context.getBean(DeepSeekProperties.class);
@@ -36,7 +38,7 @@ class AssistantConfigurationTests {
     void defaultsRetainExistingModelAndMissingKeyBehavior() {
         var properties = new DeepSeekProperties();
         assertEquals("https://api.deepseek.com", properties.getBaseUrl());
-        assertEquals("deepseek-chat", properties.getModel());
+        assertEquals("deepseek-flash", properties.getModel());
         assertFalse(new DeepSeekChatClient(properties).isConfigured());
     }
 }

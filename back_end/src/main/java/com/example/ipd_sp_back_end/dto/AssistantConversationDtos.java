@@ -7,7 +7,11 @@ public final class AssistantConversationDtos {
     private AssistantConversationDtos() { }
     public record Conversation(String id, String title, long revision, String createdAt, String updatedAt) { }
     public record Message(String id, long sequence, String role, String content, String language,
-                          String source, List<String> suggestionPrompts, String createdAt) { }
+                          String source, List<String> suggestionPrompts, String createdAt, Map<String,Object> memory) {
+        public Message(String id,long sequence,String role,String content,String language,String source,List<String> suggestionPrompts,String createdAt) {
+            this(id,sequence,role,content,language,source,suggestionPrompts,createdAt,null);
+        }
+    }
     public record Task(String id, String requestId, String questionId, String answerId, String status, String error) { }
     public record ConversationPage(List<Conversation> items, boolean hasMore) { }
     public record History(Conversation conversation, List<Message> messages, Long nextBefore, Task activeTask, Task failedTask) { }

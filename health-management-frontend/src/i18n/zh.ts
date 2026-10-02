@@ -1,4 +1,11 @@
 export const zhMessages: Record<string, string> = {
+  "Conversation memory": "会话记忆",
+  "History is saved, but is not sent to the model.": "聊天记录仍会保存，但不会发送给模型。",
+  "Memory storage is unavailable. Please retry.": "记忆服务暂不可用，请重试。",
+  "Memory changed on another device. Refresh and try again.": "记忆已在其他设备修改，请刷新后重试。",
+  "History messages used:": "使用历史消息：",
+  "Saved memories used:": "使用长期记忆：",
+  "Earlier context was summarized or reduced.": "较早上下文已摘要或缩减。",
   "Conversations": "会话列表",
   "New chat": "新对话",
   "Refresh chats": "刷新会话",
