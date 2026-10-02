@@ -5,7 +5,7 @@ import { createTypeScriptLoader } from './helpers/loadTypescript.mjs'
 function create(apiClient, environment = {}, language = 'en') {
   const load = createTypeScriptLoader({ environment, mocks: new Map([
     [new URL('../src/api/client.ts', import.meta.url), { default: apiClient }],
-    [new URL('../src/i18n/index.ts', import.meta.url), { locale: { value: language }, t: value => value === 'male' ? '男' : value }],
+    [new URL('../src/i18n/index.ts', import.meta.url), { locale: typeof language === 'string' ? { value: language } : language, t: value => value === 'male' ? '男' : value }],
   ]) })
   return load(new URL('../src/api/assistant.ts', import.meta.url)).requestAssistantReply
 }
@@ -69,4 +69,44 @@ test('parallel calls retain their own context', async () => {
   const result = await Promise.all([20, 30].map(age => reply('fitness plan', { hasProfile: true, age, last7DaysFoodCount: 0 })))
   assert.deepEqual(result, ['20', '30'])
   assert.deepEqual(contexts.map(item => item.age), [20, 30])
+})
+
+test('the same module observes language changes in requests and local replies', async () => {
+  const language = { value: 'en' }
+  const payloads = []
+  const reply = create({ post: async (_url, body) => { payloads.push(body); return { data: { answer: 'answer' } } } }, {}, language)
+  const context = { hasProfile: false, last7DaysFoodCount: 0 }
+  await reply('fitness plan', context)
+  assert.match(await reply('what can you do', context), /What I can do:/)
+  language.value = 'zh-CN'
+  await reply('fitness plan', context)
+  assert.match(await reply('what can you do', context), /我能帮助你/)
+  assert.deepEqual(payloads.map(body => body.language), ['en', 'zh-CN'])
+  assert.ok(payloads[1].constraints.includes('Respond in Simplified Chinese.'))
+})
+
+test('local goal summaries retain all goal types and zero values', async () => {
+  const context = { hasProfile: true, last7DaysFoodCount: 0, allGoalSnapshots: [
+    { goalType: 'muscle_gain', currentValue: 0, targetValue: 5, latestProgressPercentage: 0 },
+    { goalType: 'fat_loss', currentValue: 20, targetValue: 15 },
+    { goalType: 'weight_loss', currentValue: 75, targetValue: 70 },
+  ] }
+  const client = { post: async () => { assert.fail('No network expected') } }
+  const english = await create(client, { VITE_ASSISTANT_MODE: 'LOCAL' })('fitness plan', context)
+  assert.match(english, /muscle gain \[status: -, current: 0, target: 5, progress: 0%\]/)
+  assert.match(english, /fat loss/)
+  assert.match(english, /weight loss/)
+  const chinese = await create(client, { VITE_ASSISTANT_MODE: 'local' }, 'zh-CN')('运动计划', context)
+  assert.match(chinese, /增肌：当前 0，目标 5，进度 0%/)
+  assert.match(chinese, /减脂/)
+  assert.match(chinese, /减重/)
+})
+
+test('suggestion rules keep their intentional differences from local capability matching', () => {
+  const load = createTypeScriptLoader()
+  const rules = load(new URL('../src/features/assistant/rules.ts', import.meta.url))
+  assert.equal(rules.isCapabilityQuestionLoose('what functions do you have'), true)
+  assert.equal(rules.isCapabilityPromptQuestion('what functions do you have'), false)
+  assert.equal(rules.resolveSuggestionPrompts('fitness plan', 'Try asking: example').length, 5)
+  assert.equal(rules.resolveSuggestionPrompts('fitness plan', '普通回答'), undefined)
 })
