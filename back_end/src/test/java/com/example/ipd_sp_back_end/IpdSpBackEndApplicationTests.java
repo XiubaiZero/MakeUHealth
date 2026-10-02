@@ -66,6 +66,33 @@ class IpdSpBackEndApplicationTests {
     }
 
     @Test
+    void cloudChatPersistsAcrossClientsAndRejectsOtherAccounts() throws Exception {
+        String owner = newAccount(), other = newAccount();
+        var conversation = ok("POST", "/assistant/conversations", owner, null);
+        String id = conversation.path("id").asText();
+        assertEquals(404, request("GET", "/assistant/conversations/" + id + "/messages", other, null).statusCode());
+        String requestId = UUID.randomUUID().toString();
+        var body = Map.of("requestId", requestId, "expectedRevision", 0, "message", "你能做什么", "language", "zh-CN", "context", Map.of(), "mode", "api");
+        var sent = request("POST", "/assistant/conversations/" + id + "/turns", owner, body);
+        assertEquals(202, sent.statusCode());
+        JsonNode task = null;
+        for (int attempt=0; attempt<100; attempt++) {
+            task = ok("GET", "/assistant/conversations/" + id + "/turns/" + requestId, owner, null);
+            if ("completed".equals(task.path("status").asText())) break;
+            Thread.sleep(20);
+        }
+        assertEquals("completed", task.path("status").asText());
+        var history = ok("GET", "/assistant/conversations/" + id + "/messages", owner, null);
+        assertEquals(2, history.path("messages").size());
+        assertTrue(history.path("messages").get(1).path("content").asText().contains("健康数据"));
+        assertEquals(200, request("POST", "/assistant/conversations/" + id + "/turns", owner, body).statusCode());
+        assertEquals(409, request("PATCH", "/assistant/conversations/" + id, owner, Map.of("expectedRevision", 0, "title", "stale")).statusCode());
+        assertEquals(404, request("DELETE", "/assistant/conversations/" + id + "?expectedRevision=" + history.path("conversation").path("revision").asLong(), other, null).statusCode());
+        ok("DELETE", "/assistant/conversations/" + id + "?expectedRevision=" + history.path("conversation").path("revision").asLong(), owner, null);
+        assertEquals(404, request("GET", "/assistant/conversations/" + id + "/messages", owner, null).statusCode());
+    }
+
+    @Test
     void authenticationAndHealthRecordsStayWithinTheCurrentAccount() throws Exception {
         assertEquals(401, request("GET", "/users", null, null).statusCode());
         String owner = newAccount(), other = newAccount();
@@ -136,7 +163,7 @@ class IpdSpBackEndApplicationTests {
                 var jdbc = new JdbcTemplate(isolated);
                 int users = jdbc.queryForObject("SELECT COUNT(*) FROM `user`", Integer.class);
                 jdbc.update("UPDATE food_library SET calories = 777 WHERE food_name = 'Rice'");
-                var initializer = new ResourceDatabasePopulator(new ClassPathResource("schema.sql"), new ClassPathResource("data.sql"));
+                var initializer = new ResourceDatabasePopulator(new ClassPathResource("schema.sql"), new ClassPathResource("assistant-schema.sql"), new ClassPathResource("data.sql"));
                 initializer.execute(isolated);
                 jdbc.update("UPDATE food_library SET protein = 9 WHERE food_name = 'Rice'");
                 initializer.execute(isolated);

@@ -1,0 +1,408 @@
+[
+  {
+    "question": "what can you actually do",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "what can you actually do",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "what can I ask you",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "what can I ask you",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "你可以为我做些什么",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "你可以为我做些什么",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "你好，你可以做什么",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "你好，你可以做什么",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "I can help you with health and fitness guidance based on your saved data.\n\nWhat I can do:\n1. Explain your profile and latest health indicators (BP, FBG, heart rate, oxyhemoglobin) in plain language.\n2. Give diet and hydration suggestions based on your food logs and goals.\n3. Give training and routine suggestions for muscle gain, weight loss, and fat loss plans.\n4. Compare your goal progress and suggest weekly adjustments.\n5. Suggest practical daily plans that combine meals, workouts, sleep, and recovery.\n\nTry asking:\n1. \"Based on my latest data, what should I focus on this week?\"\n2. \"Create a daily routine for my fat-loss plan.\"\n3. \"How should I adjust training for my weight-loss goal?\"\n4. \"Compare my muscle-gain and fat-loss progress and suggest priorities.\"\n5. \"Give me a 7-day checklist for diet, workout, and sleep.\"\n\nLimitations:\n1. I do not provide diagnosis or emergency care.\n2. For persistent symptoms or abnormal values, consult a licensed clinician."
+  },
+  {
+    "question": "write a poem",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "I can only answer questions about body health, diet nutrition, and fitness planning. Please ask a question in this scope."
+  },
+  {
+    "question": "write a poem",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "I can only answer questions about body health, diet nutrition, and fitness planning. Please ask a question in this scope."
+  },
+  {
+    "question": "运动计划",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "Please complete your profile and submit at least one health record first. Then I can provide personalized health suggestions."
+  },
+  {
+    "question": "运动计划",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "Profile: age 20, gender male, height - cm, weight 0 kg. Latest health: BP - / - mmHg, FBG - mmol/L, heart rate - bpm, oxyhemoglobin -%. Diet logs in last 7 days: 0. Fitness goals: muscle gain [status: -, current: 0, target: 80, progress: -%]. Based on your question \"运动计划\", combine balanced meals, structured training progression, recovery sleep, and weekly tracking. If any metric is consistently abnormal, please consult a licensed clinician."
+  },
+  {
+    "question": "fitness plan",
+    "language": "en",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "Please complete your profile and submit at least one health record first. Then I can provide personalized health suggestions."
+  },
+  {
+    "question": "fitness plan",
+    "language": "en",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "Profile: age 20, gender male, height - cm, weight 0 kg. Latest health: BP - / - mmHg, FBG - mmol/L, heart rate - bpm, oxyhemoglobin -%. Diet logs in last 7 days: 0. Fitness goals: muscle gain [status: -, current: 0, target: 80, progress: -%]. Based on your question \"fitness plan\", combine balanced meals, structured training progression, recovery sleep, and weekly tracking. If any metric is consistently abnormal, please consult a licensed clinician."
+  },
+  {
+    "question": "what can you actually do",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "what can you actually do",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "what can I ask you",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "what can I ask you",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "你可以为我做些什么",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "你可以为我做些什么",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "你好，你可以做什么",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "你好，你可以做什么",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "我可以结合你保存的健康数据提供健康和健身建议。\n\n我能帮助你：\n1. 解释个人档案及血压、血糖、心率、血氧等指标。\n2. 根据饮食记录和目标提供饮食、饮水建议。\n3. 为增肌、减重和减脂提供训练与作息建议。\n4. 比较目标进度，建议每周调整。\n5. 制定结合饮食、运动、睡眠和恢复的日常安排。\n\n可以试着问：\n根据最新健康数据，我本周应重点关注什么？\n请为我的减脂目标制定 7 天运动与饮食计划。\n\n我不提供医学诊断或急救服务。持续不适或指标异常时，请咨询医生。"
+  },
+  {
+    "question": "write a poem",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "我只能回答身体健康、饮食营养和健身计划相关的问题，请提出这些范围内的问题。"
+  },
+  {
+    "question": "write a poem",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "我只能回答身体健康、饮食营养和健身计划相关的问题，请提出这些范围内的问题。"
+  },
+  {
+    "question": "运动计划",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "请先完善个人档案并提交至少一条健康记录，以便提供个性化健康建议。"
+  },
+  {
+    "question": "运动计划",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "个人档案：20 岁，男，身高 - cm，体重 0 kg。\n最新健康指标：血压 - / - mmHg，空腹血糖 - mmol/L，心率 - 次/分钟，血氧 -%。\n最近 7 天有 0 条饮食记录。\n健身目标：增肌：当前 0，目标 80，进度 -%\n建议保持均衡饮食、循序渐进训练、充足睡眠，并每周记录变化。如指标持续异常或身体不适，请咨询医生。"
+  },
+  {
+    "question": "fitness plan",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": false,
+      "last7DaysFoodCount": 0
+    },
+    "answer": "请先完善个人档案并提交至少一条健康记录，以便提供个性化健康建议。"
+  },
+  {
+    "question": "fitness plan",
+    "language": "zh-CN",
+    "context": {
+      "hasProfile": true,
+      "age": 20,
+      "gender": "male",
+      "weight": 0,
+      "last7DaysFoodCount": 0,
+      "allGoalSnapshots": [
+        {
+          "goalType": "muscle_gain",
+          "currentValue": 0,
+          "targetValue": 80,
+          "status": null
+        }
+      ]
+    },
+    "answer": "个人档案：20 岁，男，身高 - cm，体重 0 kg。\n最新健康指标：血压 - / - mmHg，空腹血糖 - mmol/L，心率 - 次/分钟，血氧 -%。\n最近 7 天有 0 条饮食记录。\n健身目标：增肌：当前 0，目标 80，进度 -%\n建议保持均衡饮食、循序渐进训练、充足睡眠，并每周记录变化。如指标持续异常或身体不适，请咨询医生。"
+  }
+]

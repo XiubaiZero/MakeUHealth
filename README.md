@@ -124,4 +124,5 @@ $env:HMS_TEST_DATABASE_PASSWORD='<测试库密码>'
 - [后端结构](back_end/docs/PROJECT_STRUCTURE.md)
 - [接口清单](back_end/docs/API_CHECKLIST.md)
 - [AI 完整链路、扩展边界与版本迭代](docs/AI_CHAIN.md)
+- [聊天记录、生成任务与接口](docs/CHAT_PERSISTENCE.md)
 - [版本更新记录](CHANGELOG.md)
