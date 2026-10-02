@@ -1,3 +1,5 @@
+import type { GoalDashboardData, HealthRecord, User } from '../../api/types'
+
 export type AssistantGoalSnapshot = {
   goalType: string
   status?: string | null
@@ -45,3 +47,13 @@ export type ChatMessage = {
 }
 
 export type GoalTypeValue = 'muscle_gain' | 'weight_loss' | 'fat_loss'
+
+export type AssistantContextInput = {
+  profile: User | null
+  latestRecord: HealthRecord | null
+  last7DaysFoodCount: number
+  fitnessDashboards: Record<GoalTypeValue, GoalDashboardData>
+  selectedGoalType: GoalTypeValue
+  selectedGoalLabel: string
+  goalTypeOptions: ReadonlyArray<{ value: GoalTypeValue; label: string }>
+}

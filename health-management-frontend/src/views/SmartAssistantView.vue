@@ -264,22 +264,16 @@
 import { t, dateLocale, locale } from '../i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { requestAssistantReply, type AssistantContext } from '../api/assistant'
+import { requestAssistantReply } from '../api/assistant'
+import type { AssistantContext, ChatMessage, GoalTypeValue } from '../features/assistant/types'
+import { buildAssistantContext, countRecentFoodIntakes, findLatestHealthRecord } from '../features/assistant/context'
+import { resolveSuggestionPrompts } from '../features/assistant/rules'
 import { getDashboardDataByType } from '../api/fitnessGoals'
 import { getFoodIntakeByUserId } from '../api/food'
 import { getHealthRecordsByUserId } from '../api/healthRecords'
 import type { FoodIntake, GoalDashboardData, HealthRecord, User } from '../api/types'
 import { getUsers } from '../api/users'
 import { getAuthStorageScope } from '../utils/auth'
-
-type ChatMessage = {
-  id: number
-  role: 'assistant' | 'user'
-  content: string
-  suggestionPrompts?: string[]
-}
-
-type GoalTypeValue = 'muscle_gain' | 'weight_loss' | 'fat_loss'
 
 const INTRO_KEY = 'smart-assistant-intro-seen-v1'
 const CHAT_HISTORY_PREFIX = 'smart-assistant-chat-history-v2'
@@ -288,31 +282,6 @@ const goalTypeOptions: Array<{ value: GoalTypeValue; label: string }> = [
   { value: 'weight_loss', label: 'Weight loss' },
   { value: 'fat_loss', label: 'Fat loss' },
 ]
-const capabilityPromptHintsEn = [
-  'what can you do',
-  'how can you help',
-  'what can you help me with',
-  'your capabilities',
-  'what can i ask',
-]
-const capabilityPromptHintsZh = [
-  '你可以为我做些什么',
-  '你可以做什么',
-  '你能做什么',
-  '你能帮我什么',
-  '你能为我做什么',
-  '你有什么功能',
-  '你支持什么',
-  '我可以问你什么',
-]
-const capabilitySuggestionPrompts = [
-  'Based on my latest health data, what should I focus on this week?',
-  'Create a 7-day workout and meal plan for my fat-loss goal.',
-  'Compare my muscle-gain and fat-loss progress and suggest priorities.',
-  'How should I adjust my daily diet based on my weight and goal?',
-  'Give me a practical weekly routine for training, sleep, and recovery.',
-]
-
 const profile = ref<User | null>(null)
 const healthRecords = ref<HealthRecord[]>([])
 const foodIntakes = ref<FoodIntake[]>([])
@@ -337,30 +306,8 @@ const selectedMessageIds = ref<number[]>([])
 
 const selectedMessageSet = computed(() => new Set(selectedMessageIds.value))
 
-const last7DaysFoodCount = computed(() => {
-  const now = Date.now()
-  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000
-
-  return foodIntakes.value.filter((item) => {
-    if (!item.intakeTime) {
-      return false
-    }
-    return new Date(item.intakeTime).getTime() >= sevenDaysAgo
-  }).length
-})
-
-const latestRecord = computed(() => {
-  if (healthRecords.value.length === 0) {
-    return null
-  }
-
-  const sorted = [...healthRecords.value].sort((a, b) => {
-    const timeA = a.recordedAt ? new Date(a.recordedAt).getTime() : 0
-    const timeB = b.recordedAt ? new Date(b.recordedAt).getTime() : 0
-    return timeB - timeA
-  })
-  return sorted[0] ?? null
-})
+const last7DaysFoodCount = computed(() => countRecentFoodIntakes(foodIntakes.value, Date.now()))
+const latestRecord = computed(() => findLatestHealthRecord(healthRecords.value))
 
 const currentDashboard = computed(() => fitnessDashboards.value[selectedGoalType.value] ?? {})
 const currentGoal = computed(() => currentDashboard.value.activeGoal ?? null)
@@ -373,47 +320,14 @@ const introLines = computed(() => [
   "Let's begin now.",
 ])
 
-const assistantContext = computed<AssistantContext>(() => ({
-  hasProfile: Boolean(profile.value),
-  age: profile.value?.age,
-  gender: profile.value?.gender,
-  height: profile.value?.height,
-  weight: profile.value?.weight,
-  latestRecordDate: latestRecord.value?.recordedAt,
-  latestSystolic: latestRecord.value?.systolic,
-  latestDiastolic: latestRecord.value?.diastolic,
-  latestFbg: latestRecord.value?.fbg,
-  latestHeartRate: latestRecord.value?.heartRate,
-  latestOxyhemoglobin: latestRecord.value?.oxyhemoglobin,
+const assistantContext = computed<AssistantContext>(() => buildAssistantContext({
+  profile: profile.value,
+  latestRecord: latestRecord.value,
   last7DaysFoodCount: last7DaysFoodCount.value,
-  activeGoalType: currentGoal.value?.goalType,
-  activeGoalStatus: currentGoal.value?.status,
-  activeGoalCurrentValue: currentGoal.value?.currentValue,
-  activeGoalTargetValue: currentGoal.value?.targetValue,
-  activeGoalWeeklyChange: currentGoal.value?.weeklyChange,
-  activeGoalTargetDate: currentGoal.value?.targetDate,
-  latestProgressValue: latestGoalProgress.value?.currentValue,
-  latestProgressPercentage: latestGoalProgress.value?.progressPercentage,
-  remainingGoalWeeks: currentDashboard.value.remainingWeeks,
+  fitnessDashboards: fitnessDashboards.value,
   selectedGoalType: selectedGoalType.value,
   selectedGoalLabel: formatGoalTypeLabel(selectedGoalType.value),
-  allGoalSnapshots: goalTypeOptions.map((item) => {
-    const dashboard = fitnessDashboards.value[item.value]
-    const goal = dashboard.activeGoal
-    const progress = dashboard.latestProgress
-
-    return {
-      goalType: item.value,
-      status: goal?.status || null,
-      currentValue: goal?.currentValue ?? null,
-      targetValue: goal?.targetValue ?? null,
-      weeklyChange: goal?.weeklyChange ?? null,
-      targetDate: goal?.targetDate ?? null,
-      latestProgressValue: progress?.currentValue ?? null,
-      latestProgressPercentage: progress?.progressPercentage ?? null,
-      remainingWeeks: dashboard.remainingWeeks ?? null,
-    }
-  }),
+  goalTypeOptions,
 }))
 
 function setStatus(message: string) {
@@ -508,39 +422,6 @@ function defaultAssistantMessage(): ChatMessage[] {
       content: t('Hello. I focus on body health, diet nutrition, and fitness planning. Ask anything in this scope and I will answer based on your saved profile, records, and goals.'),
     },
   ]
-}
-
-function isCapabilityPromptQuestion(question: string) {
-  if (!question) {
-    return false
-  }
-
-  const normalizedEn = question.toLowerCase()
-  if (capabilityPromptHintsEn.some((item) => normalizedEn.includes(item))) {
-    return true
-  }
-
-  const normalizedZh = question.toLowerCase().replace(/\s+/g, '')
-  if (capabilityPromptHintsZh.some((item) => normalizedZh.includes(item))) {
-    return true
-  }
-
-  return (
-    /(what|how).{0,25}(can|could).{0,15}you.{0,25}(do|help|support|assist)/i.test(question) ||
-    /你.{0,10}(能|可以|会).{0,25}(做什么|帮我|功能|能力|支持|问你什么)/.test(normalizedZh)
-  )
-}
-
-function resolveSuggestionPrompts(question: string, reply: string) {
-  if (isCapabilityPromptQuestion(question)) {
-    return capabilitySuggestionPrompts
-  }
-
-  if (reply.toLowerCase().includes('try asking:') || reply.includes('可以试着问')) {
-    return capabilitySuggestionPrompts
-  }
-
-  return undefined
 }
 
 function resolveChatStorageKey() {
