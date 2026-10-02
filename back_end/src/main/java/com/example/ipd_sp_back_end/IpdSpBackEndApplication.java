@@ -23,7 +23,7 @@ public class IpdSpBackEndApplication {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "X-Account-Id")
                         .allowCredentials(true)
                         .maxAge(3600);

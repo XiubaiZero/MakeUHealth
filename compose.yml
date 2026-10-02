@@ -1,0 +1,63 @@
+name: makeuhealth
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: IPD
+      MYSQL_USER: makeuhealth
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in deploy/.env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in deploy/.env}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_PASSWORD}\" mysql --protocol=TCP --host=127.0.0.1 --user=\"$${MYSQL_USER}\" --database=\"$${MYSQL_DATABASE}\" --execute='SELECT 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+  backend:
+    image: makeuhealth-backend:${HMS_IMAGE_TAG:-v0.2.1}
+    build:
+      context: .
+      dockerfile: deploy/backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8081
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/IPD?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: makeuhealth
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in deploy/.env}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?Set AUTH_JWT_SECRET in deploy/.env}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      MYBATIS_PLUS_CONFIGURATION_LOG_IMPL: org.apache.ibatis.logging.nologging.NoLoggingImpl
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=20
+    mem_limit: 768m
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8081'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+  frontend:
+    image: makeuhealth-frontend:${HMS_IMAGE_TAG:-v0.2.1}
+    build:
+      context: .
+      dockerfile: deploy/frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${HMS_BIND_ADDRESS:-127.0.0.1}:${HMS_HTTP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  mysql-data:
