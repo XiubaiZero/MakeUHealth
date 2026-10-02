@@ -163,6 +163,8 @@ async function handleLogout() {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
+  align-self: start;
   padding: 18px 10px 14px;
   border-top-right-radius: 36px;
   border-bottom-right-radius: 36px;
@@ -278,6 +280,105 @@ async function handleLogout() {
 
   .link-label {
     font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: max(12px, env(safe-area-inset-top)) 6px max(10px, env(safe-area-inset-bottom));
+    border-radius: 0 24px 24px 0;
+    gap: 12px;
+  }
+
+  .sidebar-brand {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    min-height: 0;
+    margin-top: 0;
+    gap: 6px;
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .sidebar-link,
+  .settings-button {
+    min-height: 54px;
+    padding: 9px 3px;
+    gap: 5px;
+    border-radius: 12px;
+  }
+
+  .sidebar-link.active {
+    transform: none;
+  }
+
+  .settings-button {
+    flex-shrink: 0;
+    width: 100%;
+    margin: 0;
+  }
+
+  .link-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .link-label {
+    font-size: 0.625rem;
+    line-height: 1.35;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .app-main {
+    padding: 12px 10px;
+  }
+
+  .app-main input,
+  .app-main select,
+  .app-main textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .auth-main {
+    padding: 20px;
+  }
+}
+
+@media (hover: none) {
+  .sidebar-link:hover,
+  .settings-button:hover {
+    transform: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .sidebar-brand,
+  .settings-button {
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    align-content: start;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
 }
 </style>

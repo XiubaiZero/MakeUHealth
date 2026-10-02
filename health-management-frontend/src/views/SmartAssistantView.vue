@@ -1438,13 +1438,56 @@ h2 {
 }
 
 @media (max-width: 720px) {
+  .chat-card {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px 12px;
+    border-radius: 20px;
+    gap: 14px;
+  }
+
+  .card-header,
+  .baseline-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .card-header > div,
+  .baseline-header > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .card-header h2 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+
+  .ghost-button {
+    min-height: 44px;
+    padding: 10px;
+    font-size: 0.75rem;
+  }
+
+  .embedded-baseline {
+    min-width: 0;
+    padding: 12px;
+  }
+
   .baseline-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .record-brief-grid,
   .fitness-brief > div {
     grid-template-columns: 1fr;
+  }
+
+  .record-brief {
+    min-height: 0;
+    padding: 12px;
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 
   .fitness-brief-head {
@@ -1467,7 +1510,18 @@ h2 {
   }
 
   .chat-bubble {
+    min-width: 0;
     max-width: 92%;
+    overflow-wrap: anywhere;
+  }
+
+  .bubble-header {
+    flex-wrap: wrap;
+  }
+
+  .icon-action {
+    width: 44px;
+    height: 44px;
   }
 }
 </style>
