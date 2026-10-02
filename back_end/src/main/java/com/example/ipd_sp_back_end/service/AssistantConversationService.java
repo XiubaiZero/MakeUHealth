@@ -182,6 +182,7 @@ public class AssistantConversationService {
                 boolean suggestions = answer.answer().toLowerCase(Locale.ROOT).contains("try asking:") || answer.answer().contains("可以试着问");
                 repository.append(conversation, answerId, "assistant", answer.answer(), request.language(), answer.source(), suggestions ? SUGGESTIONS : null, false);
                 if (memory!=null) memory.saveMetadata(answerId,answer.memory());
+                if (memory!=null) memory.saveSummary(conversation,claimed.snapshot(),answer.summaryUpdate(),answer.summaryThrough());
                 repository.finish(task.id(), answerId); repository.touch(conversation); return null;
             });
         } catch (Exception exception) {

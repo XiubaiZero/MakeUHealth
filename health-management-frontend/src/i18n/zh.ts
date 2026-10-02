@@ -1,4 +1,5 @@
 export const zhMessages: Record<string, string> = {
+  "Some earlier messages could not be summarized.": "部分较早消息未能生成摘要。",
   "Conversation memory": "会话记忆",
   "History is saved, but is not sent to the model.": "聊天记录仍会保存，但不会发送给模型。",
   "Memory storage is unavailable. Please retry.": "记忆服务暂不可用，请重试。",

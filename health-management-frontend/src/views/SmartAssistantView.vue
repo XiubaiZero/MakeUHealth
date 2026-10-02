@@ -191,7 +191,7 @@
               </div>
             </header>
             <p>{{ message.content }}</p>
-            <small v-if="message.memory?.enabled" class="memory-note">{{ t('History messages used:') }} {{ message.memory.historyMessages }} · {{ t('Saved memories used:') }} {{ message.memory.longTermCount }}<span v-if="message.memory.reduced"> · {{ t('Earlier context was summarized or reduced.') }}</span></small>
+            <small v-if="message.memory?.enabled" class="memory-note">{{ t('History messages used:') }} {{ message.memory.historyMessages }} · {{ t('Saved memories used:') }} {{ message.memory.longTermCount }}<span v-if="message.memory.reduced"> · {{ t('Earlier context was summarized or reduced.') }}</span><span v-if="['failed', 'too_large', 'oversized'].includes(message.memory.summaryStatus)"> · {{ t('Some earlier messages could not be summarized.') }}</span></small>
             <div
               v-if="message.role === 'assistant' && message.suggestionPrompts?.length"
               class="assistant-suggestions"
