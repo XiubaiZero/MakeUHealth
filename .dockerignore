@@ -1,0 +1,15 @@
+.git
+.validation
+.codex
+.agents
+_merge_tmp
+**/node_modules
+**/target
+**/dist
+**/.env
+**/.env.*
+**/*.log
+**/.idea
+**/.vscode
+**/.npm-cache
+deploy/backups

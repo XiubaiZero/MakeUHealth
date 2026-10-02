@@ -70,6 +70,11 @@ class IpdSpBackEndApplicationTests {
         String owner = newAccount(), other = newAccount();
         var conversation = ok("POST", "/assistant/conversations", owner, null);
         String id = conversation.path("id").asText();
+        var preflight = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/api/assistant/conversations/" + id))
+                .header("Origin", "http://localhost:5173").header("Access-Control-Request-Method", "PATCH")
+                .method("OPTIONS", HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, preflight.statusCode());
+        assertTrue(preflight.headers().firstValue("Access-Control-Allow-Methods").orElse("").contains("PATCH"));
         assertEquals(404, request("GET", "/assistant/conversations/" + id + "/messages", other, null).statusCode());
         String requestId = UUID.randomUUID().toString();
         var body = Map.of("requestId", requestId, "expectedRevision", 0, "message", "你能做什么", "language", "zh-CN", "context", Map.of(), "mode", "api");
