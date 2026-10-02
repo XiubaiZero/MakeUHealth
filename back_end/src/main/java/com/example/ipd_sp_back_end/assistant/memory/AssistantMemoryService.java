@@ -57,9 +57,13 @@ public class AssistantMemoryService {
         long accountRevision=jdbc.queryForObject("SELECT revision FROM assistant_memory_account WHERE account_id=?",Long.class,account);
         if (!setting.enabled()) return new MemorySnapshot(false,accountRevision,setting.revision(),setting.contentRevision(),"",0,List.of(),List.of(),0,List.of());
         long before=jdbc.queryForObject("SELECT sequence_no FROM assistant_message WHERE conversation_id=? AND id=?",Long.class,conversation,questionId);
-        var recent=new ArrayList<>(rounds(conversation,before,"","DESC",properties.getRecentRounds())); Collections.reverse(recent);
+        String summary=jdbc.queryForObject("SELECT summary FROM assistant_memory_conversation WHERE conversation_id=?",String.class,conversation);
+        long covered=setting.coveredSequence();
+        var recent=new ArrayList<>(rounds(conversation,before," AND a.sequence_no>?","DESC",properties.getRecentRounds(),covered)); Collections.reverse(recent);
+        long oldestRecent=recent.isEmpty()?before:recent.get(0).questionSequence();
+        var older=rounds(conversation,before," AND a.sequence_no>? AND a.sequence_no<?","ASC",20,covered,oldestRecent);
         int count=jdbc.queryForObject("SELECT COUNT(*) FROM ("+ROUND_SQL+") memory_rounds",Integer.class,conversation,before);
-        return new MemorySnapshot(true,accountRevision,setting.revision(),setting.contentRevision(),"",0,recent,List.of(),count,List.of());
+        return new MemorySnapshot(true,accountRevision,setting.revision(),setting.contentRevision(),summary==null?"":summary,covered,recent,older,count,List.of());
     }
     public boolean valid(int account,String conversation,MemorySnapshot snapshot) {
         if (jdbc.queryForObject("SELECT COUNT(*) FROM assistant_memory_conversation c JOIN assistant_memory_account a ON a.account_id=? WHERE c.conversation_id=? AND c.revision=? AND c.content_revision=? AND a.revision=?",Integer.class,account,conversation,snapshot.settingsRevision(),snapshot.contentRevision(),snapshot.accountRevision())!=1) return false;
@@ -73,6 +77,10 @@ public class AssistantMemoryService {
         if (metadata==null || metadata.isEmpty()) return;
         try { jdbc.update("INSERT INTO assistant_memory_message(message_id,metadata_json) VALUES(?,?)",message,json.writeValueAsString(metadata)); }
         catch (com.fasterxml.jackson.core.JsonProcessingException exception) { throw new IllegalStateException(exception); }
+    }
+    public void saveSummary(String conversation,MemorySnapshot snapshot,String summary,long through) {
+        if (summary==null) return;
+        jdbc.update("UPDATE assistant_memory_conversation SET summary=?,covered_sequence=? WHERE conversation_id=? AND content_revision=? AND revision=? AND covered_sequence<=?",summary,through,conversation,snapshot.contentRevision(),snapshot.settingsRevision(),through);
     }
     public List<Message> enrich(List<Message> messages) {
         if (messages.isEmpty()) return messages;

@@ -67,6 +67,14 @@ class AssistantMemoryTests {
         var fitted=budget.fit(prompt,4096); assertEquals(2,fitted.history().size()); assertEquals("Current question",fitted.userPrompt());
         assertThrows(IllegalArgumentException.class,()->budget.fit(new AssistantPrompt("Health","x".repeat(1100)),4096));
     }
+    @Test void summaryCoverageIsStoredAndSourceEditsPreventStaleSummaryWrite() {
+        String id=conversations.create(1).id(); turn(id,"训练计划"); turn(id,"饮食计划");
+        var snapshot=generations.get(1).memory();
+        tx.execute(s->{memory.lock(1);memory.saveSummary(id,snapshot,"明确个人事实",2);return null;});
+        assertTrue(memory.settings(1,id).hasSummary());
+        tx.execute(s->{memory.lock(1);memory.invalidate(1,id);memory.saveSummary(id,snapshot,"迟到摘要",2);return null;});
+        assertFalse(memory.settings(1,id).hasSummary());
+    }
     @Test void contextualFollowUpUsesRealMessageRolesAndLegacyScopeStaysUnchanged() {
         var captured=new ArrayList<AssistantPrompt>();
         ChatModelClient client=new ChatModelClient() {
