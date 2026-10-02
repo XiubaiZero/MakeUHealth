@@ -97,7 +97,9 @@ npm test
 npm run build
 ```
 
-前端测试覆盖提醒日期、账号确认隔离及失败重试等逻辑；构建包含 TypeScript 检查。
+前端测试覆盖提醒日期、账号确认隔离、助手真实模块组合、资料组装、语言切换和 API 失败兜底等逻辑；构建包含 TypeScript 检查。
+
+后端 AI 回归测试使用本地模拟 HTTP 服务，直接执行 `back_end` 中的 `.\mvnw.cmd test` 或 `.\mvnw.cmd package`，不需要数据库或 DeepSeek 密钥，不调用付费模型。
 
 后端集成测试必须显式指定**独立测试库**，否则跳过，避免误连正常开发数据库：
 
@@ -119,3 +121,5 @@ $env:HMS_TEST_DATABASE_PASSWORD='<测试库密码>'
 - `_merge_tmp/`：本机历史合并材料，不参与当前构建，不上传至 GitHub。
 - [后端结构](back_end/docs/PROJECT_STRUCTURE.md)
 - [接口清单](back_end/docs/API_CHECKLIST.md)
+- [AI 完整链路、扩展边界与版本迭代](docs/AI_CHAIN.md)
+- [版本更新记录](CHANGELOG.md)
