@@ -14,6 +14,22 @@ public class JavaAssistantEngine implements AssistantEngine {
     private final AssistantService assistant;
     private final AssistantIntentClassifier classifier;
     public JavaAssistantEngine(AssistantService assistant, AssistantIntentClassifier classifier) { this.assistant = assistant; this.classifier = classifier; }
+    @Override public void validate(AssistantChatRequest request) { assistant.validateMemoryInput(request); }
+    @Override public AssistantAnswer generate(AssistantGenerationRequest generation) {
+        var request=generation.request(); var memory=generation.memory();
+        boolean chinese="zh-CN".equals(request.getLanguage());
+        if (capability(request.getMessage())) return new AssistantAnswer(capabilityReply(chinese),"fixed");
+        if ("local".equals(generation.mode())) return new AssistantAnswer(local(request),"local");
+        try {
+            var result=assistant.askWithMemory(request,memory);
+            var info=new LinkedHashMap<String,Object>();
+            info.put("enabled",memory.enabled() && !result.calls().isEmpty()); info.put("historyMessages",result.historyMessages());
+            info.put("longTermCount",result.calls().isEmpty()?0:memory.facts().size()); info.put("reduced",result.reduced());
+            info.put("summaryStatus",result.summaryStatus()); info.put("calls",result.calls().stream().map(c->Map.of("model",c.model(),"finishReason",c.finishReason(),"elapsedMillis",c.elapsedMillis(),"usage",c.usage())).toList());
+            return new AssistantAnswer(result.answer(),assistant.usesModel(request,memory)?"api":"fixed",info,result.summaryUpdate(),result.summaryThrough());
+        } catch (IllegalArgumentException exception) { throw exception; }
+        catch (RuntimeException exception) { return new AssistantAnswer(local(request)+(chinese ? " （服务暂不可用，当前使用本地参考回答。）" : " (API is unavailable, currently using local fallback.)"),"fallback"); }
+    }
     private boolean capability(String question) {
         String normalized = Normalizer.normalize(question, Normalizer.Form.NFKC).toLowerCase(Locale.ROOT);
         if (classifier.classify(question) == AssistantIntent.CAPABILITY || classifier.classify(normalized) == AssistantIntent.CAPABILITY) return true;

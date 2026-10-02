@@ -1,6 +1,9 @@
 package com.example.ipd_sp_back_end.service;
 
 import com.example.ipd_sp_back_end.assistant.AssistantEngine;
+import com.example.ipd_sp_back_end.assistant.AssistantGenerationRequest;
+import com.example.ipd_sp_back_end.assistant.memory.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.example.ipd_sp_back_end.dto.AssistantChatRequest;
 import com.example.ipd_sp_back_end.dto.AssistantConversationDtos.*;
 import com.example.ipd_sp_back_end.repository.AssistantConversationRepository;
@@ -28,6 +31,7 @@ public class AssistantConversationService {
     private final TransactionTemplate transactions;
     private final AssistantEngine engine;
     private final Executor executor;
+    private final AssistantMemoryService memory;
     private final ObjectMapper json = new ObjectMapper();
     private static final List<String> SUGGESTIONS = List.of(
             "Based on my latest health data, what should I focus on this week?",
@@ -38,9 +42,16 @@ public class AssistantConversationService {
 
     public AssistantConversationService(AssistantConversationRepository repository, TransactionTemplate transactions,
             AssistantEngine engine, @Qualifier("assistantTaskExecutor") Executor executor) {
+        this(repository,transactions,engine,executor,null);
+    }
+    @Autowired
+    public AssistantConversationService(AssistantConversationRepository repository, TransactionTemplate transactions,
+            AssistantEngine engine, @Qualifier("assistantTaskExecutor") Executor executor, AssistantMemoryService memory) {
         this.repository = repository; this.transactions = transactions; this.engine = engine; this.executor = executor;
+        this.memory = memory;
     }
     private <T> T transaction(Supplier<T> action) { return transactions.execute(status -> action.get()); }
+    private <T> T transaction(int account,Supplier<T> action) { return transaction(() -> { if (memory!=null) memory.lock(account); return action.get(); }); }
     private ResponseStatusException error(HttpStatus status, String message) { return new ResponseStatusException(status, message); }
     private Conversation owned(int account, String id) {
         Conversation conversation = repository.owned(account, id, true);
@@ -66,29 +77,30 @@ public class AssistantConversationService {
         return new ConversationPage(rows.stream().limit(limit).toList(), rows.size() > limit);
     }
     public Conversation create(int account) {
-        return transaction(() -> { String id = uuid(); repository.create(account, id, null, null); return owned(account, id); });
+        return transaction(account, () -> { String id = uuid(); repository.create(account, id, null, null); return owned(account, id); });
     }
     public History history(int account, String id, Long before, int limit) {
         if ((before != null && before < 1) || limit < 1 || limit > 80) throw error(HttpStatus.BAD_REQUEST, "Invalid pagination.");
-        return transaction(() -> {
+        return transaction(account, () -> {
             Conversation conversation = owned(account, id);
             var descending = repository.messages(id, before, limit + 1);
             var rows = new ArrayList<>(descending.stream().limit(limit).toList());
             Collections.reverse(rows);
-            return new History(conversation, rows, descending.size() > limit ? rows.get(0).sequence() : null, repository.active(id), repository.failed(id));
+            return new History(conversation, memory==null?rows:memory.enrich(rows), descending.size() > limit ? rows.get(0).sequence() : null, repository.active(id), repository.failed(id));
         });
     }
     public Conversation rename(int account, String id, RenameRequest request) {
         if (request.title() == null || request.title().trim().isEmpty() || request.title().trim().codePointCount(0, request.title().trim().length()) > 100) throw error(HttpStatus.BAD_REQUEST, "Title must contain 1 to 100 characters.");
-        return transaction(() -> { var conversation = owned(account, id); revision(conversation, request.expectedRevision()); repository.rename(id, request.title().trim()); return owned(account, id); });
+        return transaction(account, () -> { var conversation = owned(account, id); revision(conversation, request.expectedRevision()); repository.rename(id, request.title().trim()); return owned(account, id); });
     }
     public void delete(int account, String id, Long expected) {
-        transaction(() -> { revision(owned(account, id), expected); repository.delete(id); return null; });
+        transaction(account, () -> { revision(owned(account, id), expected); if (memory!=null) memory.invalidate(account,id); repository.delete(id); return null; });
     }
     public void deleteMessages(int account, String id, DeleteMessagesRequest request) {
         if (request.messageIds() == null || request.messageIds().isEmpty() || request.messageIds().size() > 1000) throw error(HttpStatus.BAD_REQUEST, "Select messages to delete.");
-        transaction(() -> {
+        transaction(account, () -> {
             revision(owned(account, id), request.expectedRevision()); idle(id);
+            if (memory!=null) memory.invalidate(account,id);
             for (String message : new HashSet<>(request.messageIds())) {
                 if (repository.message(id, message) == null) throw error(HttpStatus.NOT_FOUND, "Message not found.");
                 repository.deleteMessage(id, message);
@@ -97,7 +109,7 @@ public class AssistantConversationService {
         });
     }
     public Task task(int account, String id, String requestId) {
-        return transaction(() -> { owned(account, id); var task = repository.byRequest(id, requestId); if (task == null) throw error(HttpStatus.NOT_FOUND, "Generation task not found."); return task; });
+        return transaction(account, () -> { owned(account, id); var task = repository.byRequest(id, requestId); if (task == null) throw error(HttpStatus.NOT_FOUND, "Generation task not found."); return task; });
     }
     public Task send(int account, String id, SendRequest request) {
         try { UUID.fromString(request.requestId()); }
@@ -106,10 +118,14 @@ public class AssistantConversationService {
         if (question.isEmpty() || question.length() > 20000) throw error(HttpStatus.BAD_REQUEST, "Message must contain 1 to 20000 characters.");
         var payload = new SendRequest(request.requestId(), request.expectedRevision(), question, language(request.language()),
                 request.context(), request.constraints(), "local".equals(request.mode()) ? "local" : "api", request.editMessageId());
+        if (!"local".equals(payload.mode())) {
+            var input=new AssistantChatRequest(); input.setMessage(question); input.setLanguage(payload.language()); input.setContext(payload.context()); input.setConstraints(payload.constraints());
+            try { engine.validate(input); } catch (IllegalArgumentException exception) { throw error(HttpStatus.BAD_REQUEST,exception.getMessage()); }
+        }
         String raw = encode(payload);
         if (raw.getBytes(StandardCharsets.UTF_8).length > 262144) throw error(HttpStatus.BAD_REQUEST, "Assistant context is too large.");
         boolean[] created = {false};
-        Task task = transaction(() -> {
+        Task task = transaction(account, () -> {
             Conversation conversation = owned(account, id);
             // An accepted request is replayed before the revision check.
             Task previous = repository.byRequest(id, request.requestId());
@@ -123,6 +139,7 @@ public class AssistantConversationService {
                 Message original = repository.message(id, request.editMessageId());
                 if (original == null || !"user".equals(original.role())) throw error(HttpStatus.NOT_FOUND, "Original question not found.");
                 questionId = original.id();
+                if (memory!=null) memory.invalidate(account,id);
                 repository.edit(id, original, question, payload.language());
             } else {
                 questionId = uuid();
@@ -141,21 +158,30 @@ public class AssistantConversationService {
     }
     private void generate(int account, String conversation, Task task) {
         try {
-            String raw = transaction(() -> { owned(account, conversation); return repository.claim(task.id()); });
-            if (raw == null) return;
+            record Claimed(String raw,MemorySnapshot snapshot) { }
+            Claimed claimed=transaction(account, () -> {
+                owned(account,conversation); String raw=repository.claim(task.id());
+                return raw==null?null:new Claimed(raw,memory==null?MemorySnapshot.empty():memory.snapshot(account,conversation,task.questionId()));
+            });
+            if (claimed==null) return;
+            String raw=claimed.raw();
             SendRequest request = json.readValue(raw, SendRequest.class);
             var chat = new AssistantChatRequest();
             chat.setMessage(request.message()); chat.setLanguage(request.language()); chat.setContext(request.context()); chat.setConstraints(request.constraints());
             // The model call deliberately runs after the claim transaction has committed.
-            var answer = engine.generate(chat, request.mode());
+            var answer = engine.generate(new AssistantGenerationRequest(chat,request.mode(),claimed.snapshot()));
             if (answer.answer() == null || answer.answer().isBlank()) throw new IllegalStateException("Empty answer.");
-            transaction(() -> {
+            transaction(account, () -> {
                 if (repository.owned(account, conversation, true) == null) return null;
                 Task current = repository.byRequest(conversation, task.requestId());
                 if (current == null || !"running".equals(current.status()) || repository.message(conversation, task.questionId()) == null) return null;
+                if (memory!=null && !memory.valid(account,conversation,claimed.snapshot())) {
+                    repository.fail(task.id(),"Memory changed while generating. Please retry."); repository.touch(conversation); return null;
+                }
                 String answerId = uuid();
                 boolean suggestions = answer.answer().toLowerCase(Locale.ROOT).contains("try asking:") || answer.answer().contains("可以试着问");
                 repository.append(conversation, answerId, "assistant", answer.answer(), request.language(), answer.source(), suggestions ? SUGGESTIONS : null, false);
+                if (memory!=null) memory.saveMetadata(answerId,answer.memory());
                 repository.finish(task.id(), answerId); repository.touch(conversation); return null;
             });
         } catch (Exception exception) {
@@ -164,7 +190,7 @@ public class AssistantConversationService {
     }
     private void fail(int account, String conversation, String task, String message) {
         try {
-            transaction(() -> { if (repository.owned(account, conversation, true) != null) { repository.fail(task, message); repository.touch(conversation); } return null; });
+            transaction(account, () -> { if (repository.owned(account, conversation, true) != null) { repository.fail(task, message); repository.touch(conversation); } return null; });
         } catch (RuntimeException exception) { log.warn("Unable to persist assistant task status; timeout recovery will retry."); }
     }
     @EventListener(ApplicationReadyEvent.class)
@@ -175,7 +201,7 @@ public class AssistantConversationService {
             for (String conversation : repository.timedOutConversations()) {
                 Integer account = repository.account(conversation);
                 if (account == null) continue;
-                transaction(() -> {
+                transaction(account, () -> {
                     if (repository.owned(account, conversation, true) == null) return null;
                     Task task = repository.active(conversation);
                     if (task != null && repository.expire(task.id())) repository.touch(conversation);
@@ -195,7 +221,7 @@ public class AssistantConversationService {
         String fingerprint;
         try { fingerprint = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8))); }
         catch (Exception exception) { throw new IllegalStateException(exception); }
-        return transaction(() -> {
+        return transaction(account, () -> {
             repository.lockAccount(account);
             var existing = repository.imported(account, fingerprint);
             if (existing != null) return existing;

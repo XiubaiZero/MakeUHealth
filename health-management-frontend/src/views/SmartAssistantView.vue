@@ -34,6 +34,7 @@
           <h2>{{ currentConversation?.title || t("Health & Fitness Chat") }}</h2>
         </div>
         <div class="conversation-actions">
+          <ConversationMemoryControl :conversation-id="currentConversation?.id || ''" :disabled="working || sending || !online" />
           <button class="ghost-button conversation-toggle" type="button" :aria-expanded="showConversations" @click="showConversations = !showConversations">{{ t('Conversations') }}</button>
           <button class="ghost-button" type="button" :disabled="working" @click="refreshChat">{{ t('Refresh chats') }}</button>
           <button class="ghost-button" type="button" :disabled="working || !online || !currentConversation || unconfirmed" @click="openRenameDialog">{{ t('Rename chat') }}</button>
@@ -190,6 +191,7 @@
               </div>
             </header>
             <p>{{ message.content }}</p>
+            <small v-if="message.memory?.enabled" class="memory-note">{{ t('History messages used:') }} {{ message.memory.historyMessages }} · {{ t('Saved memories used:') }} {{ message.memory.longTermCount }}<span v-if="message.memory.reduced"> · {{ t('Earlier context was summarized or reduced.') }}</span></small>
             <div
               v-if="message.role === 'assistant' && message.suggestionPrompts?.length"
               class="assistant-suggestions"
@@ -331,6 +333,7 @@
 </template>
 
 <script setup lang="ts">
+import ConversationMemoryControl from '../components/ConversationMemoryControl.vue'
 import { t, dateLocale, locale } from '../i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
