@@ -3,7 +3,7 @@ package com.example.ipd_sp_back_end.assistant;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix="assistant.intent")
 public class AssistantIntentProperties {
-    private String mode="rules";
+    private String mode="semantic";
     private int recentRounds=3, inputBudget=8192, maxTokens=256, timeoutSeconds=10;
     private double temperature=0;
     public String getMode(){return mode;} public void setMode(String v){mode=v;}

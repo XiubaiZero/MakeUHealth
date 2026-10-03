@@ -71,6 +71,7 @@ public class AssistantService {
     public MemoryAnswer askWithMemory(AssistantChatRequest request,MemorySnapshot memory) {
         return answer(request,memory,AssistantCallDeadline.unlimited(),true);
     }
+    private static final class InputBudgetException extends IllegalArgumentException { InputBudgetException(String message){super(message);} }
     private MemoryAnswer answer(AssistantChatRequest request,MemorySnapshot memory,AssistantCallDeadline deadline,boolean withMemory) {
         String question=question(request);boolean chinese="zh-CN".equals(request.getLanguage());
         var decision=intentClassifier.classify(AssistantIntentInput.from(question,request.getLanguage(),memory),deadline);
@@ -90,8 +91,9 @@ public class AssistantService {
             String summaryStatus=prepared.status();
             try { prompt=budget.fit(prompt,properties.getMaxTokens()); }
             catch (IllegalArgumentException exception) {
-                if (effective.summary().isBlank()) throw exception;
-                prompt=budget.fit(new AssistantPrompt(original.systemPrompt()+MEMORY_INSTRUCTIONS,original.userPrompt()+factsReference(effective),effective.history()),properties.getMaxTokens());
+                if (effective.summary().isBlank()) throw new InputBudgetException(exception.getMessage());
+                try { prompt=budget.fit(new AssistantPrompt(original.systemPrompt()+MEMORY_INSTRUCTIONS,original.userPrompt()+factsReference(effective),effective.history()),properties.getMaxTokens()); }
+                catch(IllegalArgumentException required){throw new InputBudgetException(required.getMessage());}
                 summaryStatus="omitted_budget";
             }
             var result=modelClient.complete(prompt,new ChatCompletionOptions(properties.getTemperature(),properties.getMaxTokens(),deadline.timeout(60),false));
@@ -101,7 +103,7 @@ public class AssistantService {
                 calls.add(result);purposes.add("rewrite");text=responseProcessor.clean(result.text());
             }
             return new MemoryAnswer(text,calls,prompt.history().size(),memory.totalRounds()*2>prompt.history().size(),prepared.update(),prepared.through(),summaryStatus,true,decision,purposes);
-        } catch (IllegalArgumentException exception) {throw exception;}
+        } catch (InputBudgetException exception) {throw exception;}
         catch (Exception exception) {throw new RuntimeException("Assistant request failed: "+exception.getMessage(),exception);}
     }
 }

@@ -12,6 +12,7 @@ import java.util.*;
 
 @Component @Primary
 public class SemanticAssistantIntentClassifier implements AssistantIntentClassifier {
+    private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(SemanticAssistantIntentClassifier.class);
     private final RuleBasedAssistantIntentClassifier rules;
     private final ChatModelClient client;
     private final AssistantIntentProperties properties;
@@ -51,6 +52,8 @@ public class SemanticAssistantIntentClassifier implements AssistantIntentClassif
         return new AssistantPrompt(system,json.writeValueAsString(Map.of("currentQuestion",input.question(),"language",Objects.toString(input.language(),"en"),"earlierSummary",summary,"recentRounds",rounds)));
     }
     private AssistantIntentDecision failure(String reason,int history,long start,ChatCompletionResult result) {
-        return new AssistantIntentDecision(null,"degraded",reason,history,(System.nanoTime()-start)/1_000_000,result);
+        long elapsed=(System.nanoTime()-start)/1_000_000;
+        log.warn("Assistant intent degraded: reason={}, historyMessages={}, elapsedMillis={}",reason,history,elapsed);
+        return new AssistantIntentDecision(null,"degraded",reason,history,elapsed,result);
     }
 }

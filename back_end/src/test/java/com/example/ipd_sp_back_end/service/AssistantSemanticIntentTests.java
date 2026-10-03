@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AssistantSemanticIntentTests {
     static final ObjectMapper JSON=new ObjectMapper();
     static class Model implements ChatModelClient {
-        boolean configured=true; String category="HEALTH", raw; int failures;
+        boolean configured=true; String category="HEALTH", raw, finish="stop"; int failures;
         final List<AssistantPrompt> prompts=new CopyOnWriteArrayList<>();
         final List<ChatCompletionOptions> options=new CopyOnWriteArrayList<>();
         public boolean isConfigured(){return configured;}
@@ -23,7 +23,7 @@ class AssistantSemanticIntentTests {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());prompts.add(p);options.add(o);
             if(o.json() && failures>0){failures--;throw new HttpTimeoutException("simulated");}
             String text=o.json()?(raw==null?"{\"intent\":\""+category+"\"}":raw):"健康建议。";
-            return new ChatCompletionResult(text,"test","stop",1,Map.of("prompt_tokens",20,"completion_tokens",5));
+            return new ChatCompletionResult(text,"test",o.json()?finish:"stop",1,Map.of("prompt_tokens",20,"completion_tokens",5));
         }
     }
     AssistantIntentProperties settings(){var p=new AssistantIntentProperties();p.setMode("semantic");return p;}
@@ -59,6 +59,12 @@ class AssistantSemanticIntentTests {
             assertTrue(result.intent().degraded());assertTrue(result.usedModel());assertEquals(2,m.options.size());
         }
         var m=new Model();m.failures=1;assertTrue(service(m,settings()).askWithMemory(request("I feel dizzy"),MemorySnapshot.empty()).usedModel());assertEquals(2,m.options.size());
+    }
+    @Test void truncatedAndDuplicateJsonResultsAreRejected() throws Exception {
+        var truncated=new Model();truncated.finish="length";
+        var result=service(truncated,settings()).askWithMemory(request("健康计划"),MemorySnapshot.empty());assertTrue(result.intent().degraded());assertEquals(2,truncated.options.size());
+        var duplicate=new Model();duplicate.raw="{\"intent\":\"HEALTH\",\"intent\":\"HEALTH\"}";
+        assertTrue(service(duplicate,settings()).askWithMemory(request("健康计划"),MemorySnapshot.empty()).intent().degraded());
     }
     @Test void historyIsLimitedAndMemoryOffRemovesSummaryAndRounds() throws Exception {
         for(boolean enabled:List.of(true,false)) {
