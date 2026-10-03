@@ -1,4 +1,15 @@
 export const zhMessages: Record<string, string> = {
+  "Send messages with Enter": "开启回车键发送消息",
+  "Enter sends; Ctrl+Enter inserts a new line.": "Enter 发送消息；Ctrl+Enter 换行。",
+  "Enter inserts a new line; click Send to send.": "Enter 换行；点击发送按钮发送消息。",
+  "Message cannot be blank": "消息不能为空",
+  "Cannot send a blank message. Please enter some content.": "不能发送空白消息，请输入内容。",
+  "Failed to load chat preferences. The current keyboard mode is still in use.": "聊天设置加载失败，继续使用当前快捷键设置。",
+  "Failed to save chat preferences. Your previous setting is still in use.": "聊天设置保存失败，继续使用之前的设置。",
+  "Chat preferences changed on another device. Review the latest setting and try again.": "其他设备已修改聊天设置，请确认最新设置后重试。",
+  "Chat preferences are unavailable. Please retry.": "聊天设置暂不可用，请重试。",
+  "On": "开启", "Off": "关闭", "OK": "确定",
+
   "Required context exceeds the input budget. Shorten your question or reduce saved memory.": "必要资料超出输入预算，请缩短问题或减少已保存的记忆。",
   "Memory changed while generating. Please retry.": "生成期间记忆发生变更，请重试。",
   "Only confirmed facts are used in other chats. Extracting suggestions uses the model once.": "只有已确认的资料会用于其他会话。提取候选记忆会调用一次模型。",

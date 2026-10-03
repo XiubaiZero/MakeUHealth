@@ -102,7 +102,7 @@
     </main>
 
     <button v-if="!showNavigation" class="auth-settings-button" type="button" :aria-label="t('Open settings')" aria-haspopup="dialog" :aria-expanded="showSettings" @click="showSettings = true">{{ t("文 / A") }}</button>
-    <SettingsDialog :open="showSettings" :authenticated="loggedIn" :signing-out="signingOut" @close="showSettings = false" @logout="handleLogout" />
+    <SettingsDialog :open="showSettings" :authenticated="loggedIn" :signing-out="signingOut" :assistant-settings-visible="route.name === 'smart-assistant'" @close="showSettings = false" @logout="handleLogout" />
     <GlobalReminderAlert v-if="loggedIn" />
   </div>
 </template>
@@ -113,6 +113,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import GlobalReminderAlert from './components/GlobalReminderAlert.vue'
 import SettingsDialog from './components/SettingsDialog.vue'
+import { assistantPreferences } from './features/assistant/preferences'
 import { t } from './i18n'
 import { clearAuthSession, isAuthenticated } from './utils/auth'
 
@@ -131,6 +132,7 @@ watch(
   () => route.fullPath,
   () => {
     loggedIn.value = isAuthenticated()
+    assistantPreferences.checkScope()
   },
   { immediate: true },
 )
@@ -140,6 +142,7 @@ async function handleLogout() {
   signingOut.value = true
   try {
     clearAuthSession()
+    assistantPreferences.reset()
     loggedIn.value = false
     showSettings.value = false
     await router.push('/login')

@@ -26,7 +26,7 @@ class JavaAssistantEngineTests {
         var engine = new JavaAssistantEngine(assistant, new RuleBasedAssistantIntentClassifier());
         var request = new AssistantChatRequest();
         request.setMessage("what can you actually do"); request.setLanguage("en"); request.setContext(Map.of());
-        assertTrue(engine.generate(request, "api").answer().contains("What I can do:"));
+        assertTrue(engine.generate(request, "local").answer().contains("What I can do:"));
         request.setMessage("运动计划"); request.setLanguage("zh-CN");
         request.setContext(Map.of("hasProfile", true, "age", 20, "gender", "male", "last7DaysFoodCount", 0, "allGoalSnapshots", List.of(Map.of("goalType", "muscle_gain", "currentValue", 0))));
         var local = engine.generate(request, "local");

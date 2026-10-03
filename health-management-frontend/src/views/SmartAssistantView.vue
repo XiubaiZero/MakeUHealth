@@ -230,6 +230,8 @@
         <button class="ghost-button" type="button" :disabled="working || sending || !online || unconfirmed" @click="retryFailedQuestion">{{ t('Retry generation') }}</button>
       </div>
 
+      <p class="composer-hint">{{ t(enterSendEnabled ? 'Enter sends; Ctrl+Enter inserts a new line.' : 'Enter inserts a new line; click Send to send.') }}</p>
+      <p v-if="preferencesError" class="composer-hint" role="status">{{ t(preferencesError) }} <button type="button" :disabled="preferencesLoading" @click="assistantPreferences.refresh()">{{ t('Retry') }}</button></p>
       <form v-if="!deleteSelectionMode" class="chat-input-wrap" @submit.prevent="sendMessage">
         <p v-if="editingMessageId" class="edit-banner"> {{ t("Editing a previous message.") }} <button class="inline-action-button" type="button" :disabled="sending" @click="cancelEditMessage"> {{ t("Cancel edit") }} </button>
         </p>
@@ -239,10 +241,13 @@
           rows="3"
           :placeholder="t('Ask about body health, diet nutrition, or fitness planning...')"
           :disabled="sending || working"
+          @keydown="handleComposerKeydown"
+          @compositionstart="composing = true"
+          @compositionend="composing = false"
           @keydown.esc="cancelEditMessage"
         ></textarea>
         <div class="chat-actions">
-          <button class="primary-button" type="submit" :disabled="sending || working || !online || unconfirmed || !draftMessage.trim()">
+          <button class="primary-button" type="submit" :disabled="sending || working || !online || unconfirmed">
             {{ t(sending ? 'Thinking...' : editingMessageId ? 'Update & resend' : 'Send') }}
           </button>
         </div>
@@ -276,6 +281,13 @@
       </div>
     </div>
 
+    <div v-if="showBlankWarning" class="confirm-overlay" @click.self="closeBlankWarning" @keydown.esc.stop.prevent="closeBlankWarning" @keydown.enter.stop>
+      <section ref="blankDialogRef" class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="blank-warning-title" aria-describedby="blank-warning-copy" tabindex="-1" @keydown.tab.prevent="blankConfirmRef?.focus()">
+        <h3 id="blank-warning-title">{{ t('Message cannot be blank') }}</h3>
+        <p id="blank-warning-copy">{{ t('Cannot send a blank message. Please enter some content.') }}</p>
+        <div class="confirm-actions"><button ref="blankConfirmRef" class="primary-button" type="button" @click="closeBlankWarning">{{ t('OK') }}</button></div>
+      </section>
+    </div>
     <div v-if="showRenameDialog" class="confirm-overlay" @click.self="showRenameDialog = false">
       <form class="confirm-dialog" @submit.prevent="confirmRename">
         <h3>{{ t('Rename chat') }}</h3>
@@ -334,6 +346,39 @@
 
 <script setup lang="ts">
 import ConversationMemoryControl from '../components/ConversationMemoryControl.vue'
+import { assistantPreferences } from '../features/assistant/preferences'
+import { composerKeyAction, composerSendAction, insertComposerNewline } from '../features/assistant/composer'
+const { enterSendEnabled, error: preferencesError, loading: preferencesLoading } = assistantPreferences
+const composing = ref(false), showBlankWarning = ref(false)
+const blankDialogRef = ref<HTMLElement | null>(null), blankConfirmRef = ref<HTMLButtonElement | null>(null)
+let preferencesTimer: ReturnType<typeof setInterval> | undefined
+function refreshPreferencesVisibility() {
+  if (preferencesTimer) clearInterval(preferencesTimer)
+  preferencesTimer = undefined
+  if (!document.hidden) {
+    void assistantPreferences.refresh()
+    preferencesTimer = setInterval(() => { void assistantPreferences.refresh() }, 15000)
+  }
+}
+function handleComposerKeydown(event: KeyboardEvent) {
+  const action = composerKeyAction(event, enterSendEnabled.value, composing.value)
+  if (action === 'native') return
+  event.preventDefault()
+  if (document.querySelector('[aria-modal="true"]') || showIntro.value || showBlankWarning.value || showEditConfirm.value || showRenameDialog.value || showImportDialog.value || showDeleteDialog.value || showDeleteSelectedDialog.value) return
+  if (action === 'send') void sendMessage()
+  if (action === 'newline' && !sending.value && !working.value) {
+    const input = chatInputRef.value
+    if (!input) return
+    const next = insertComposerNewline(draftMessage.value, input.selectionStart, input.selectionEnd)
+    draftMessage.value = next.text
+    void nextTick(() => { input.setSelectionRange(next.caret, next.caret) })
+  }
+}
+async function closeBlankWarning() {
+  showBlankWarning.value = false
+  await nextTick(); chatInputRef.value?.focus()
+}
+
 import { t, dateLocale, locale } from '../i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
@@ -701,7 +746,10 @@ async function sendSuggestionPrompt(prompt: string) {
 }
 
 async function sendMessage() {
-  if (editingMessageId.value && !editConfirmed.value) { showEditConfirm.value = true; return }
+  const action = composerSendAction(draftMessage.value, sending.value || working.value || !online.value || unconfirmed.value || showBlankWarning.value, Boolean(editingMessageId.value), editConfirmed.value)
+  if (action === 'blocked') return
+  if (action === 'blank') { showBlankWarning.value = true; await nextTick(); blankConfirmRef.value?.focus(); return }
+  if (action === 'confirm') { showEditConfirm.value = true; return }
   const request = buildAssistantRequest(draftMessage.value.trim(), assistantContext.value)
   await cloud.send({ ...request, mode: (import.meta.env.VITE_ASSISTANT_MODE || 'api').toLowerCase() === 'api' ? 'api' : 'local' })
   deleteSelectionMode.value = false; selectedMessageIds.value = []
@@ -749,11 +797,14 @@ function handleVisibilityChange() {
 }
 function handleAuthStorage(event: StorageEvent) {
   if (event.key !== 'health-management-auth-session') return
+  assistantPreferences.reset(); showBlankWarning.value = false; void assistantPreferences.refresh()
   contextEpoch++; profile.value = null; healthRecords.value = []; foodIntakes.value = []; fitnessDashboards.value = createEmptyGoalDashboards()
   void refreshChat(); void loadAssistantContext()
 }
 
 onMounted(async () => {
+  refreshPreferencesVisibility()
+  document.addEventListener('visibilitychange', refreshPreferencesVisibility)
   document.addEventListener('click', handleDocumentClick)
   document.addEventListener('visibilitychange', handleVisibilityChange)
   window.addEventListener('storage', handleAuthStorage)
@@ -767,6 +818,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   contextEpoch++
+  if (preferencesTimer) clearInterval(preferencesTimer)
+  document.removeEventListener('visibilitychange', refreshPreferencesVisibility)
   document.removeEventListener('click', handleDocumentClick)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   window.removeEventListener('storage', handleAuthStorage)
@@ -775,6 +828,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.composer-hint { color: #53716f; font-size: .8rem; line-height: 1.5; margin: .4rem 0; }
+.composer-hint button { border: 0; background: transparent; color: #347b75; text-decoration: underline; cursor: pointer; }
 .assistant-workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 1rem; align-items: start; }
 .conversation-panel { min-width: 0; padding: 1rem; border: 1px solid #d7e5e2; border-radius: 18px; background: #f4f9f7; display: grid; gap: .75rem; }
 .conversation-toolbar, .conversation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }

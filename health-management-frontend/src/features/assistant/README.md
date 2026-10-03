@@ -17,3 +17,8 @@
 `localReplies.ts` 保留旧 API 的兼容逻辑；新版完整回答归属后端 `JavaAssistantEngine`，迁移文案通过 56 组浏览器输出基准验证。健康资料字段在 `types.ts` 和 `context.ts`，请求与附加要求在 `transport.ts`。模型侧提示词、语义分类及未来 Python 引擎边界见[完整链路说明](../../../../docs/AI_CHAIN.md)。
 
 测试通过 Node 与现有 TypeScript 转译器加载真实模块依赖图，仅替换 API 客户端与语言状态边界；每个测试有独立模块缓存。
+
+
+## v0.2.3 输入偏好
+
+composer.ts 决定快捷键及发送校验，页面管理焦点、弹窗和编辑确认。preferences/state.ts 是账号隔离的服务端偏好状态；api.ts 提供请求边界。设置弹窗和聊天页共享实例，保存成功后更新模式，后台同步不产生离线修改。

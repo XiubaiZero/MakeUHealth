@@ -17,6 +17,11 @@
             <span class="settings-row-copy"><strong>{{ t('Language') }}</strong><small>{{ locale === 'zh-CN' ? '简体中文' : 'English' }}</small></span>
             <span aria-hidden="true">›</span>
           </button>
+          <div v-if="authenticated && assistantSettingsVisible" class="settings-row preferences-row">
+            <span class="settings-row-copy"><strong id="enter-send-label">{{ t('Send messages with Enter') }}</strong><small>{{ t(enterSendEnabled ? 'Enter sends; Ctrl+Enter inserts a new line.' : 'Enter inserts a new line; click Send to send.') }}</small></span>
+            <button class="preferences-switch" type="button" role="switch" aria-labelledby="enter-send-label" :aria-checked="enterSendEnabled" :disabled="preferencesSaving || preferencesLoading || preferencesRevision === null" @click="assistantPreferences.save(!enterSendEnabled)">{{ t(enterSendEnabled ? 'On' : 'Off') }}</button>
+          </div>
+          <p v-if="authenticated && assistantSettingsVisible && preferencesError" class="settings-hint" role="status">{{ t(preferencesError) }} <button type="button" class="settings-secondary" :disabled="preferencesLoading || preferencesSaving" @click="assistantPreferences.refresh()">{{ t('Retry') }}</button></p>
           <button v-if="authenticated" class="settings-row" type="button" @click="panel = 'memory'"><span class="settings-row-icon" aria-hidden="true">AI</span><span class="settings-row-copy"><strong>{{ t('Long-term memory') }}</strong><small>{{ t('Manage confirmed personal facts') }}</small></span><span aria-hidden="true">›</span></button>
           <button v-if="authenticated" class="settings-row settings-logout" type="button" @click="panel = 'logout'">
             <span class="settings-row-icon" aria-hidden="true">↪</span>
@@ -54,8 +59,10 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { locale, setLocale, t, type AppLocale } from '../i18n'
 import MemoryManager from './MemoryManager.vue'
+import { assistantPreferences } from '../features/assistant/preferences'
+const { enterSendEnabled, revision: preferencesRevision, loading: preferencesLoading, saving: preferencesSaving, error: preferencesError } = assistantPreferences
 
-const props = defineProps<{ open: boolean; authenticated: boolean; signingOut?: boolean }>()
+const props = defineProps<{ open: boolean; authenticated: boolean; signingOut?: boolean; assistantSettingsVisible?: boolean }>()
 const emit = defineEmits<{ close: []; logout: [] }>()
 const panel = ref<'settings' | 'language' | 'logout' | 'memory'>('settings')
 const dialogRef = ref<HTMLElement | null>(null)
@@ -91,6 +98,7 @@ function releaseDialog() {
 watch(() => props.open, async (open) => {
   if (open) {
     panel.value = 'settings'
+    if (props.authenticated && props.assistantSettingsVisible) void assistantPreferences.refresh()
     previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
     previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -114,6 +122,10 @@ onBeforeUnmount(() => { if (props.open) releaseDialog() })
 .settings-close { margin-left: auto; }
 .settings-options { display: grid; gap: 10px; }
 .settings-row { width: 100%; display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid #e0eae4; border-radius: 16px; background: #f7faf6; color: inherit; text-align: left; cursor: pointer; }
+.preferences-row { cursor: default; }
+.preferences-switch { flex-shrink: 0; min-width: 54px; padding: 9px 12px; border: 1px solid #8ab6ad; border-radius: 20px; background: #edf4f0; color: #375d62; cursor: pointer; }
+.preferences-switch[aria-checked="true"] { background: #408f88; color: white; }
+.preferences-switch:disabled { opacity: .6; cursor: wait; }
 .settings-row:hover { border-color: #6aaca5; background: #eff7f2; }
 .settings-row-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 13px; font-weight: 700; background: #deeeea; color: #347b75; }
 .settings-row-copy { flex: 1; display: grid; gap: 5px; }

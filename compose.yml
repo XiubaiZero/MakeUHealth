@@ -18,7 +18,7 @@ services:
       retries: 12
       start_period: 30s
   backend:
-    image: makeuhealth-backend:${HMS_IMAGE_TAG:-v0.2.2}
+    image: makeuhealth-backend:${HMS_IMAGE_TAG:-v0.2.3}
     build:
       context: .
       dockerfile: deploy/backend/Dockerfile
@@ -32,6 +32,7 @@ services:
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?Set AUTH_JWT_SECRET in deploy/.env}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      ASSISTANT_INTENT_MODE: ${ASSISTANT_INTENT_MODE:-semantic}
       MYBATIS_PLUS_CONFIGURATION_LOG_IMPL: org.apache.ibatis.logging.nologging.NoLoggingImpl
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=20
     mem_limit: 768m
@@ -45,7 +46,7 @@ services:
       retries: 12
       start_period: 30s
   frontend:
-    image: makeuhealth-frontend:${HMS_IMAGE_TAG:-v0.2.2}
+    image: makeuhealth-frontend:${HMS_IMAGE_TAG:-v0.2.3}
     build:
       context: .
       dockerfile: deploy/frontend/Dockerfile

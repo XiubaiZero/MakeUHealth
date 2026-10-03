@@ -9,6 +9,13 @@ git clone https://github.com/XiubaiZero/MakeUHealth.git
 cd MakeUHealth
 ```
 
+## v0.2.3 智能助手
+
+- API 模式先语义分类，再进入健康问答或固定回复；已有对话记忆继续使用。分类失败直接交给现有问答模型。验收结果见 [语义分类评测](docs/AI_INTENT_EVALUATION.md)。
+- 聊天页打开左侧底部设置，可切换“开启回车键发送消息”。默认开启：Enter 发送、Ctrl+Enter 换行、Shift+Enter 换行；关闭后 Enter 换行，点击按钮发送。空白内容发送会弹出警告。
+- 输入偏好按账号保存在后端，不随会话记忆清除；页面可见时最多约 15 秒同步其他设备的变更。首次加载设置失败仍默认开启，后续失败保留已确认设置。
+- 如需回退分类：设置环境变量 ASSISTANT_INTENT_MODE=rules 后重启后端；输入偏好在设置中独立关闭。
+
 ## 环境要求
 
 - Node.js `^20.19.0 || >=22.12.0`，npm。
@@ -35,7 +42,7 @@ $env:SPRING_DATASOURCE_PASSWORD='<本机数据库密码>'
 .\mvnw.cmd spring-boot:run
 ```
 
-后端默认监听 `http://localhost:8081`。启动时执行 `schema.sql`、`assistant-schema.sql`、`assistant-memory-schema.sql`，再运行 `data.sql`，创建业务、聊天及记忆表，补齐受支持旧字段并初始化食物库。数据库用户需要相应建表和修改表权限。
+后端默认监听 `http://localhost:8081`。启动时执行 `schema.sql`、`assistant-schema.sql`、`assistant-memory-schema.sql`、`assistant-preferences-schema.sql`，再运行 `data.sql`，创建业务、聊天及记忆表，补齐受支持旧字段并初始化食物库。数据库用户需要相应建表和修改表权限。
 
 另开终端启动前端：
 

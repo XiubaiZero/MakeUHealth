@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-03",
+  "classified": 40,
+  "correct": 40,
+  "accuracy": 1,
+  "classificationMillis": {
+    "min": 230,
+    "median": 590,
+    "mean": 591.33,
+    "max": 1250
+  },
+  "comparisons": [
+    {
+      "case": "weight-en",
+      "oldIntent": "CAPABILITY",
+      "newIntent": "HEALTH",
+      "oldCalls": 0,
+      "newCalls": 2,
+      "oldMillis": 7,
+      "newMillis": 3095,
+      "reviewPassed": true
+    },
+    {
+      "case": "dizzy-zh",
+      "oldIntent": "OUT_OF_SCOPE",
+      "newIntent": "HEALTH",
+      "oldCalls": 0,
+      "newCalls": 2,
+      "oldMillis": 3,
+      "newMillis": 2935,
+      "reviewPassed": true
+    },
+    {
+      "case": "training-en",
+      "oldIntent": "HEALTH",
+      "newIntent": "OUT_OF_SCOPE",
+      "oldCalls": 1,
+      "newCalls": 1,
+      "oldMillis": 755,
+      "newMillis": 752,
+      "reviewPassed": true
+    },
+    {
+      "case": "followup-en",
+      "oldIntent": "OUT_OF_SCOPE",
+      "newIntent": "HEALTH",
+      "oldCalls": 1,
+      "newCalls": 2,
+      "oldMillis": 2162,
+      "newMillis": 2113,
+      "reviewPassed": true
+    },
+    {
+      "case": "switch-en",
+      "oldIntent": "HEALTH",
+      "newIntent": "OUT_OF_SCOPE",
+      "oldCalls": 1,
+      "newCalls": 1,
+      "oldMillis": 825,
+      "newMillis": 586,
+      "reviewPassed": true
+    }
+  ],
+  "budget": {
+    "startedAt": "2026-10-03T12:06:28.601Z",
+    "completedAt": "2026-10-03T12:08:35.648Z",
+    "model": "deepseek-flash",
+    "thinking": "disabled",
+    "limitCalls": 60,
+    "limitCny": 3,
+    "calls": 52,
+    "estimatedPeakCny": 0.033380799999999995,
+    "unresolvedReservations": [],
+    "ratesCnyPerMillion": {
+      "cacheHit": 0.04,
+      "cacheMiss": 2,
+      "output": 8
+    },
+    "pricingSource": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/",
+    "billing": "Conservative peak-price estimate from usage, plus unresolved maximum reservations; not an account invoice."
+  },
+  "unscoredCalls": 1,
+  "manualReview": "Reviewed the 5 new full answers: health questions reach main answer; coding routes to fixed out-of-scope; prior walking suggestion is preserved. This is routing evaluation, not clinical validity evaluation."
+}

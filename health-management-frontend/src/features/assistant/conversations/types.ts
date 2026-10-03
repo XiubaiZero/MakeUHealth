@@ -2,7 +2,7 @@ export type Conversation = { id: string; title: string | null; revision: number;
 export type ConversationMessage = {
   id: string; sequence: number; role: 'user' | 'assistant'; content: string
   language: string | null; source: string; suggestionPrompts?: string[] | null; createdAt: string | null
-  memory?: { enabled: boolean; historyMessages: number; longTermCount: number; reduced: boolean; summaryStatus: string } | null
+  memory?: { enabled: boolean; historyMessages: number; longTermCount: number; reduced: boolean; summaryStatus: string; intent?: { category: string; status: string; reason: string; promptVersion: string; historyMessages: number; elapsedMillis: number; usage: Record<string, unknown> }; calls?: { purpose: string; model: string; elapsedMillis: number; usage: Record<string, unknown> }[] } | null
 }
 export type GenerationTask = {
   id: string; requestId: string; questionId: string; answerId: string | null

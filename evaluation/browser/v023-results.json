@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "checks": [
+    "blank Enter warns without creating conversation or message; Escape restores focus",
+    "blank Send button uses the same modal",
+    "Ctrl Enter replaces selection with newline and restores caret",
+    "Shift Enter inserts newline",
+    "Enter sends exactly once during repeated keys and pending generation",
+    "Chromium native composition lifecycle: confirm does not send, next Enter sends",
+    "IME composition Enter does not submit (synthetic composition events)",
+    "disabled setting restores Enter newline",
+    "two independent browser contexts share confirmed server preference",
+    "different account retains default enabled",
+    "page reload restores server preference",
+    "failed save does not optimistically change keyboard mode",
+    "visible page detects remote changes through 15-second synchronization",
+    "blank edited question warns first; nonblank Enter retains edit confirmation",
+    "offline Enter retains draft and creates no unsynchronized messages",
+    "320 and 390 pixel mobile settings and blank warnings fit the viewport",
+    "first preference load failure retains enabled Enter mode"
+  ],
+  "turns": 4,
+  "creates": 2,
+  "nativeImeManualTest": "Windows input method user testing not performed; synthetic events and Chromium native composition lifecycle both passed."
+}

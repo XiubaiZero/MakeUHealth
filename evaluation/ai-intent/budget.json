@@ -1,0 +1,18 @@
+{
+  "startedAt": "2026-10-03T12:06:28.601Z",
+  "completedAt": "2026-10-03T12:08:35.648Z",
+  "model": "deepseek-flash",
+  "thinking": "disabled",
+  "limitCalls": 60,
+  "limitCny": 3,
+  "calls": 52,
+  "estimatedPeakCny": 0.033380799999999995,
+  "unresolvedReservations": [],
+  "ratesCnyPerMillion": {
+    "cacheHit": 0.04,
+    "cacheMiss": 2,
+    "output": 8
+  },
+  "pricingSource": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/",
+  "billing": "Conservative peak-price estimate from usage, plus unresolved maximum reservations; not an account invoice."
+}

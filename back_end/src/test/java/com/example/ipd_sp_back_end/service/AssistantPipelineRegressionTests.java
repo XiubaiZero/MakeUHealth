@@ -95,17 +95,22 @@ class AssistantPipelineRegressionTests {
         assertEquals("Assistant request failed: rewrite unavailable", ((ApiErrorResponse)response.getBody()).getMessage());
         assertEquals(2, calls.get());
     }
+    @Test void upstreamArgumentFailureRetains500InsteadOfBecomingInput400() {
+        ChatModelClient client=new ChatModelClient(){public boolean isConfigured(){return true;}public String complete(AssistantPrompt p){throw new IllegalArgumentException("simulated model argument failure");}};
+        var response=new AssistantController(AssistantServiceTestSupport.service(client)).chat(input("en","fitness plan"));
+        assertEquals(500,response.getStatusCode().value());
+    }
     private void assertModelFailure(FakeModel model) {
         var response=new AssistantController(AssistantServiceTestSupport.configured(model.url())).chat(input("en","fitness plan"));
         assertEquals(500,response.getStatusCode().value());
         assertTrue(((ApiErrorResponse)response.getBody()).getMessage().startsWith("Assistant request failed:"));
     }
-    @Test void timeoutKeepsErrorAnd60SecondLimit() throws Exception {
+    @Test void timeoutKeepsErrorWithinSynchronousDeadline() throws Exception {
         var client=Mockito.mock(HttpClient.class); List<HttpRequest> requests=new ArrayList<>();
         when(client.send(any(HttpRequest.class),Mockito.<HttpResponse.BodyHandler<String>>any())).thenAnswer(invocation->{ requests.add(invocation.getArgument(0)); throw new HttpTimeoutException("simulated timeout"); });
         var response=new AssistantController(AssistantServiceTestSupport.withHttpClient(client)).chat(input("en","fitness plan"));
         assertEquals(500,response.getStatusCode().value()); assertTrue(((ApiErrorResponse)response.getBody()).getMessage().contains("simulated timeout"));
-        assertEquals(Duration.ofSeconds(60),requests.get(0).timeout().orElseThrow());
+        assertTrue(requests.get(0).timeout().orElseThrow().compareTo(Duration.ofSeconds(55)) <= 0);
     }
     @Test void concurrentContextsDoNotMix() throws Exception {
         try (var model=new FakeModel(200,"answer")) {

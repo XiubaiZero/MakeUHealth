@@ -34,6 +34,15 @@ class AssistantConfigurationTests {
         }
     }
 
+    @Test void intentConfigurationBindsSeparatelyFromAnswerAndMemory() {
+        try(var context=new AnnotationConfigApplicationContext()) {
+            context.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.SystemEnvironmentPropertySource("systemEnvironment",Map.of("ASSISTANT_INTENT_MODE","rules","ASSISTANT_INTENT_MAXTOKENS","128","ASSISTANT_INTENT_INPUTBUDGET","4096","ASSISTANT_DEEPSEEK_TEMPERATURE","0.7")));
+            context.register(AssistantConfiguration.class);context.refresh();
+            var intent=context.getBean(AssistantIntentProperties.class);assertEquals("rules",intent.getMode());assertEquals(128,intent.getMaxTokens());assertEquals(4096,intent.getInputBudget());
+            assertEquals(0,intent.getTemperature());assertEquals(.7,context.getBean(DeepSeekProperties.class).getTemperature());assertEquals(12,context.getBean(com.example.ipd_sp_back_end.assistant.memory.AssistantMemoryProperties.class).getRecentRounds());
+        }
+        assertEquals("semantic",new AssistantIntentProperties().getMode());
+    }
     @Test
     void defaultsRetainExistingModelAndMissingKeyBehavior() {
         var properties = new DeepSeekProperties();
