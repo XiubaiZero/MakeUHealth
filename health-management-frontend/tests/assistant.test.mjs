@@ -40,7 +40,7 @@ test('Chinese capability and fallback replies use Chinese', async () => {
 
 test('capability and local mode do not call the network', async () => {
   const client = { post: async () => { assert.fail('No network expected') } }
-  assert.match(await create(client)('what can you do', { hasProfile: false, last7DaysFoodCount: 0 }), /What I can do:/)
+  assert.match(await create(client, { VITE_ASSISTANT_MODE: 'local' })('what can you do', { hasProfile: false, last7DaysFoodCount: 0 }), /What I can do:/)
   const local = create(client, { VITE_ASSISTANT_MODE: 'local' }, 'zh-CN')
   assert.equal(await local('write a poem', { hasProfile: false, last7DaysFoodCount: 0 }), '我只能回答身体健康、饮食营养和健身计划相关的问题，请提出这些范围内的问题。')
   assert.match(await local('运动计划', { hasProfile: false, last7DaysFoodCount: 0 }), /请先完善个人档案/)
@@ -77,12 +77,12 @@ test('the same module observes language changes in requests and local replies', 
   const reply = create({ post: async (_url, body) => { payloads.push(body); return { data: { answer: 'answer' } } } }, {}, language)
   const context = { hasProfile: false, last7DaysFoodCount: 0 }
   await reply('fitness plan', context)
-  assert.match(await reply('what can you do', context), /What I can do:/)
+  assert.equal(await reply('what can you do', context), 'answer')
   language.value = 'zh-CN'
   await reply('fitness plan', context)
-  assert.match(await reply('what can you do', context), /我能帮助你/)
-  assert.deepEqual(payloads.map(body => body.language), ['en', 'zh-CN'])
-  assert.ok(payloads[1].constraints.includes('Respond in Simplified Chinese.'))
+  assert.equal(await reply('what can you do', context), 'answer')
+  assert.deepEqual(payloads.map(body => body.language), ['en', 'en', 'zh-CN', 'zh-CN'])
+  assert.ok(payloads[2].constraints.includes('Respond in Simplified Chinese.'))
 })
 
 test('local goal summaries retain all goal types and zero values', async () => {

@@ -105,7 +105,7 @@ class AssistantPipelineRegressionTests {
         when(client.send(any(HttpRequest.class),Mockito.<HttpResponse.BodyHandler<String>>any())).thenAnswer(invocation->{ requests.add(invocation.getArgument(0)); throw new HttpTimeoutException("simulated timeout"); });
         var response=new AssistantController(AssistantServiceTestSupport.withHttpClient(client)).chat(input("en","fitness plan"));
         assertEquals(500,response.getStatusCode().value()); assertTrue(((ApiErrorResponse)response.getBody()).getMessage().contains("simulated timeout"));
-        assertEquals(Duration.ofSeconds(60),requests.get(0).timeout().orElseThrow());
+        assertTrue(requests.get(0).timeout().orElseThrow().compareTo(Duration.ofSeconds(55)) <= 0);
     }
     @Test void concurrentContextsDoNotMix() throws Exception {
         try (var model=new FakeModel(200,"answer")) {

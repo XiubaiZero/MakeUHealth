@@ -28,5 +28,10 @@ public class AssistantReplyCatalog {
 
     public String capability(boolean chinese) { return chinese ? "我可以结合你保存的健康数据，解释健康指标，提供饮食、运动、睡眠和恢复建议，比较健身目标进度，并帮助制定日常计划。你可以问：根据最新健康数据，我本周应重点关注什么？我不提供医学诊断或急救服务；持续不适或指标异常时，请咨询医生。" : CAPABILITY_RESPONSE; }
     public String outOfScope(boolean chinese) { return chinese ? "我只能回答身体健康、饮食营养和健身计划相关的问题，请提出这些范围内的问题。" : "I can only answer questions about body health, diet nutrition, and fitness planning. Please ask a question in this scope."; }
+    public String clarify(boolean chinese) { return chinese ? "你希望我帮你解答哪方面的问题？可以补充身体情况、饮食需求或健身目标。" : "What would you like help with? Please describe your health concern, diet needs, or fitness goal."; }
+    public String social(boolean chinese) { return chinese ? "你好！很高兴为你提供健康、饮食和健身方面的帮助。" : "Hello! I am here to help with health, diet, and fitness questions."; }
+    public String fixed(AssistantIntent intent, boolean chinese) {
+        return switch(intent) { case CAPABILITY -> capability(chinese); case OUT_OF_SCOPE -> outOfScope(chinese); case CLARIFY -> clarify(chinese); case SOCIAL -> social(chinese); case HEALTH -> throw new IllegalArgumentException("Health requires a model answer."); };
+    }
     public String missingConfiguration(boolean chinese) { return chinese ? "健康助手暂未配置，请稍后再试。" : "Assistant API key is missing on the server. Please configure DEEPSEEK_API_KEY."; }
 }

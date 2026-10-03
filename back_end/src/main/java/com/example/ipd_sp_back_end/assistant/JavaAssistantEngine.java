@@ -19,15 +19,17 @@ public class JavaAssistantEngine implements AssistantEngine {
     @Override public AssistantAnswer generate(AssistantGenerationRequest generation) {
         var request=generation.request(); var memory=generation.memory();
         boolean chinese="zh-CN".equals(request.getLanguage());
-        if (capability(request.getMessage())) return new AssistantAnswer(capabilityReply(chinese),"fixed");
         if ("local".equals(generation.mode())) return new AssistantAnswer(local(request),"local");
         try {
             var result=assistant.askWithMemory(request,memory);
             var info=new LinkedHashMap<String,Object>();
-            info.put("enabled",memory.enabled() && !result.calls().isEmpty()); info.put("historyMessages",result.historyMessages());
-            info.put("longTermCount",result.calls().isEmpty()?0:memory.facts().size()); info.put("reduced",result.reduced());
-            info.put("summaryStatus",result.summaryStatus()); info.put("calls",result.calls().stream().map(c->Map.of("model",c.model(),"finishReason",c.finishReason(),"elapsedMillis",c.elapsedMillis(),"usage",c.usage())).toList());
-            return new AssistantAnswer(result.answer(),assistant.usesModel(request,memory)?"api":"fixed",info,result.summaryUpdate(),result.summaryThrough());
+            info.put("enabled",memory.enabled() && result.usedModel()); info.put("historyMessages",result.historyMessages());
+            info.put("longTermCount",result.usedModel()?memory.facts().size():0); info.put("reduced",result.reduced());
+            info.put("summaryStatus",result.summaryStatus()); info.put("intent",result.intent().metadata());
+            var callInfo=new ArrayList<Map<String,Object>>();
+            for(int i=0;i<result.calls().size();i++) {var c=result.calls().get(i);callInfo.add(Map.of("purpose",result.callPurposes().get(i),"model",c.model(),"finishReason",c.finishReason(),"elapsedMillis",c.elapsedMillis(),"usage",c.usage()));}
+            info.put("calls",callInfo);
+            return new AssistantAnswer(!result.usedModel() && result.intent().intent()==AssistantIntent.CAPABILITY ? capabilityReply(chinese) : result.answer(),result.usedModel()?"api":"fixed",info,result.summaryUpdate(),result.summaryThrough());
         } catch (IllegalArgumentException exception) { throw exception; }
         catch (RuntimeException exception) { return new AssistantAnswer(local(request)+(chinese ? " （服务暂不可用，当前使用本地参考回答。）" : " (API is unavailable, currently using local fallback.)"),"fallback"); }
     }
@@ -38,7 +40,6 @@ public class JavaAssistantEngine implements AssistantEngine {
     }
     @Override public AssistantAnswer generate(AssistantChatRequest request, String mode) {
         boolean chinese = "zh-CN".equals(request.getLanguage());
-        if (capability(request.getMessage())) return new AssistantAnswer(capabilityReply(chinese), "fixed");
         if ("local".equals(mode)) return new AssistantAnswer(local(request), "local");
         try {
             String answer = assistant.ask(request);
