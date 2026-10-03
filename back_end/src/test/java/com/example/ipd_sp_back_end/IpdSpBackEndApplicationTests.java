@@ -65,6 +65,18 @@ class IpdSpBackEndApplicationTests {
         return token;
     }
 
+    @Test void assistantPreferencesAreAuthenticatedPersistedAndAccountIsolated() throws Exception {
+        assertEquals(401,request("GET","/assistant/preferences",null,null).statusCode());
+        String one=newAccount(),two=newAccount();
+        assertTrue(ok("GET","/assistant/preferences",one,null).path("enterSendEnabled").asBoolean());
+        var changed=ok("PATCH","/assistant/preferences",one,Map.of("enterSendEnabled",false,"expectedRevision",0));
+        assertEquals(1,changed.path("revision").asLong());
+        assertFalse(ok("GET","/assistant/preferences",one,null).path("enterSendEnabled").asBoolean());
+        assertTrue(ok("GET","/assistant/preferences",two,null).path("enterSendEnabled").asBoolean());
+        assertEquals(409,request("PATCH","/assistant/preferences",one,Map.of("enterSendEnabled",true,"expectedRevision",0)).statusCode());
+        assertEquals(400,request("PATCH","/assistant/preferences",one,Map.of("enterSendEnabled",true)).statusCode());
+    }
+
     @Test
     void cloudChatPersistsAcrossClientsAndRejectsOtherAccounts() throws Exception {
         String owner = newAccount(), other = newAccount();
