@@ -18,7 +18,7 @@ services:
       retries: 12
       start_period: 30s
   backend:
-    image: makeuhealth-backend:${HMS_IMAGE_TAG:-v0.2.3}
+    image: makeuhealth-backend:${HMS_IMAGE_TAG:-v0.2.4}
     build:
       context: .
       dockerfile: deploy/backend/Dockerfile
@@ -46,7 +46,7 @@ services:
       retries: 12
       start_period: 30s
   frontend:
-    image: makeuhealth-frontend:${HMS_IMAGE_TAG:-v0.2.3}
+    image: makeuhealth-frontend:${HMS_IMAGE_TAG:-v0.2.4}
     build:
       context: .
       dockerfile: deploy/frontend/Dockerfile

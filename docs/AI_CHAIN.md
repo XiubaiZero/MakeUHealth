@@ -2,6 +2,8 @@
 
 ## v0.2.x 当前链路
 
+v0.2.4 将七类问答及记忆文案外置为 `back_end/src/main/resources/prompts/*-v1.txt`，初始化时读取，语言短句和段落结构仍由 Java 组装。修改后需重新打包、重启；加载契约见 [AI 架构说明](../back_end/docs/AI_ARCHITECTURE.md#v024-提示词资源)，本次验收见 [v0.2.4](../版本计划/v0.2.4/v0.2.4.md)。
+
 聊天页面通过 `features/assistant/conversations/` 调用云端会话接口；Java 统一管理账号权限、记录、版本冲突和生成任务。问题及任务先提交，`AssistantEngine` 在事务外生成，最后提交回答。前端进入、切换会话、返回前台和手动刷新时更新；等待生成期间每两秒查询，隐藏页面时暂停。
 
 ```mermaid
