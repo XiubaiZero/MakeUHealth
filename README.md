@@ -9,6 +9,12 @@ git clone https://github.com/XiubaiZero/MakeUHealth.git
 cd MakeUHealth
 ```
 
+## v0.2.4 提示词维护
+
+问答、长期记忆提取、摘要、英文改写及三段记忆说明已放入 `back_end/src/main/resources/prompts/*-v1.txt`。文件以 UTF-8 无 BOM 保存，初始化时通过 ClassPathResource 读取；修改后需要重新打包、重启后端。
+
+语言短句和段落结构继续由 Java 组装，模型参数、记忆行为及接口沿用现有实现。资源加载只移除末尾 CR/LF，缺失、空白文件或 BOM 会使初始化失败。清单与验收见 [v0.2.4 计划及验收](版本计划/v0.2.4/v0.2.4.md)。
+
 ## v0.2.3 智能助手
 
 - API 模式先语义分类，再进入健康问答或固定回复；已有对话记忆继续使用。分类失败直接交给现有问答模型。验收结果见 [语义分类评测](docs/AI_INTENT_EVALUATION.md)。
