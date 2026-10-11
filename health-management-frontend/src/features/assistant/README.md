@@ -14,7 +14,7 @@
 
 进入页面、切换会话、返回前台及手动刷新时更新。当前页面等待生成时每两秒查询，隐藏或卸载时停止。草稿及未确认请求使用按账号隔离的 sessionStorage，服务器不可用时不创建离线消息。未确认发送沿用原 UUID，刷新后先恢复原会话并查询任务。
 
-`localReplies.ts` 保留旧 API 的兼容逻辑；新版完整回答归属后端 `JavaAssistantEngine`，迁移文案通过 56 组浏览器输出基准验证。健康资料字段在 `types.ts` 和 `context.ts`，请求与附加要求在 `transport.ts`。模型侧提示词、语义分类及未来 Python 引擎边界见[完整链路说明](../../../../docs/AI_CHAIN.md)。
+`localReplies.ts` 保留旧 API 的兼容逻辑；新版完整回答归属后端 `JavaAssistantEngine`，迁移文案通过 56 组浏览器输出基准验证。健康资料字段在 `types.ts` 和 `context.ts`，请求与附加要求在 `transport.ts`。
 
 测试通过 Node 与现有 TypeScript 转译器加载真实模块依赖图，仅替换 API 客户端与语言状态边界；每个测试有独立模块缓存。
 

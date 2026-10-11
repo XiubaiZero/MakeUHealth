@@ -7,3 +7,19 @@ dist/
 .env.*
 !.env.example
 deploy/backups/
+
+# Personal plans and generated review files stay local.
+/docs/
+/版本计划/
+/output/
+/outputs/
+
+# Evaluation scripts stay tracked; generated results and spending ledgers do not.
+/evaluation/**/results.jsonl
+/evaluation/**/cases.csv
+/evaluation/**/budget.json
+/evaluation/**/summary.json
+/evaluation/**/comparison.md
+/evaluation/**/*-results.json
+/evaluation/**/output/
+/evaluation/**/outputs/
